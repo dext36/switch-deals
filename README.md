@@ -12,8 +12,11 @@ Backend zbiera gry na Switcha, które są **aktualnie w promocji w eShopie** i m
 1. **Lista promocji** – wyszukiwarka Nintendo of Europe (`searching.nintendo-europe.com`, z niej korzysta nintendo.com): wszystkie gry na Switcha z obniżoną ceną.
 2. **Oceny krytyków** – [IGDB](https://api-docs.igdb.com/) (`aggregated_rating`, średnia z recenzji krytyków). To nie jest Metacritic – Metacritic nie ma publicznego API – ale ocena jest zbliżona. IGDB ocenia grę na wszystkich platformach razem, a nie osobno wersję na Switcha.
 3. **Ceny** – API cen Nintendo (`api.ec.nintendo.com`) dla kraju `ESHOP_COUNTRY` (domyślnie PL). Na liście zostają tylko gry przecenione w tym kraju.
-4. **Popularność** – wyszukiwarka eShopu zwraca promocje posortowane po popularności, więc pozycja gry na tej liście to jej miejsce w rankingu (`popularityRank`). Na stronie można przełączać sortowanie: ocena / popularność.
-5. **Filmy** – najpierw film „gameplay” z IGDB, potem wyszukiwanie w YouTube Data API, a na końcu zwiastun z IGDB. Gdy nic nie ma, strona pokazuje link do wyszukiwarki YouTube.
+4. **Popularność** – wyszukiwarka eShopu zwraca promocje posortowane po popularności, więc pozycja gry na tej liście to jej miejsce w rankingu (`popularityRank`).
+5. **Ocena graczy** – średnia z ocen użytkowników IGDB (`rating`, `rating_count`). Przy sortowaniu po niej liczy się też liczba ocen: ocena gry jest ważona jak w rankingu IMDb (ciągnięta do typowej oceny 70 z siłą równą medianie liczby ocen na liście), więc gra z kilkoma ocenami nie wyprzedzi gry ocenionej podobnie przez setki graczy.
+6. **Filmy** – najpierw film „gameplay” z IGDB, potem wyszukiwanie w YouTube Data API, a na końcu zwiastun z IGDB. Gdy nic nie ma, strona pokazuje link do wyszukiwarki YouTube.
+
+Na stronie można przełączać sortowanie: ocena krytyków / ocena graczy / popularność.
 
 Tytuły z eShopu i IGDB są dopasowywane po znormalizowanej nazwie (bez ™/®, interpunkcji, dopisków „Nintendo Switch Edition”), również po alternatywnych nazwach z IGDB. Gry o mocno różniących się tytułach mogą zostać pominięte.
 

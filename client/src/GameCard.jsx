@@ -56,6 +56,11 @@ export default function GameCard({ game }) {
           {game.originalPrice && <s>{game.originalPrice}</s>}
           {game.discount != null && <span className="discount">-{game.discount}%</span>}
         </p>
+        {game.communityScore != null && (
+          <p className="community" title="Średnia z ocen użytkowników IGDB">
+            Gracze: <strong>{game.communityScore}</strong> ({game.communityRatings.toLocaleString('pl-PL')} ocen)
+          </p>
+        )}
         {game.popularityRank && (
           <p className="popularity" title="Miejsce wśród gier w promocji, według popularności w eShopie Nintendo of Europe">
             Popularność w eShopie: #{game.popularityRank}
