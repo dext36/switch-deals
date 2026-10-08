@@ -27,6 +27,7 @@ const deals = await findRatedDeals({
   fetchSalePrices: (ids) => fetchSalePrices(ids, { country, userAgent }),
 });
 console.log(`Deals (${country}, ${config.minCriticScore}+):`, deals.length);
+console.log('with IGDB gameplay:', deals.filter((d) => d.igdbGameplayVideoId).length, 'with IGDB trailer only:', deals.filter((d) => !d.igdbGameplayVideoId && d.igdbTrailerVideoId).length);
 for (const d of deals) console.log(`${d.criticScore} (${d.criticReviews}) | ${d.title} | ${d.price} (${d.originalPrice}, -${d.discount}%) | gp:${d.igdbGameplayVideoId ?? '-'} tr:${d.igdbTrailerVideoId ?? '-'}`);
 
 // Gry z IGDB o podobnych tytułach, które nie zostały dopasowane – pomoc przy poprawianiu normalizacji.
