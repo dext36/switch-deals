@@ -18,15 +18,40 @@ const SCHEMA = `
 
 const iso = (date) => (date ? date.toISOString() : null);
 
+// Adres bazy do logów – bez użytkownika i hasła.
+function describe(connectionString) {
+  try {
+    const url = new URL(connectionString);
+    return `${url.hostname}${url.pathname}`;
+  } catch {
+    return 'DATABASE_URL';
+  }
+}
+
 // Ten sam interfejs co createFileStore: load() / save(data).
 // Lista gier to jeden wiersz, filmy są osobno, żeby przetrwały zniknięcie gry z listy.
 export function createPgStore(connectionString) {
   const pool = new pg.Pool({ connectionString, max: 3 });
-  const ready = pool.query(SCHEMA);
+  const name = describe(connectionString);
+  // Np. Neon zamyka bezczynne połączenia – bez tej obsługi błąd wywróciłby cały proces.
+  pool.on('error', (err) => console.error(`Postgres: zerwane połączenie z bazą ${name}: ${err.message}`));
+
+  // Łączy się i tworzy tabele przy starcie; po nieudanej próbie ponawia przy kolejnym użyciu bazy.
+  let connecting = null;
+  const connect = () =>
+    (connecting ??= pool.query(SCHEMA).then(
+      () => console.log(`Postgres: połączono z bazą ${name}`),
+      (err) => {
+        console.error(`Postgres: nie udało się połączyć z bazą ${name}: ${err.message}`);
+        connecting = null;
+        throw err;
+      },
+    ));
+  connect().catch(() => {});
 
   return {
     async load() {
-      await ready;
+      await connect();
       const [list, videos] = await Promise.all([
         pool.query('SELECT checked_at, updated_at, built_at, eshop_ids, games FROM game_list WHERE id = 1'),
         pool.query('SELECT slug, video FROM game_videos'),
@@ -43,7 +68,7 @@ export function createPgStore(connectionString) {
     },
 
     async save(data) {
-      await ready;
+      await connect();
       const client = await pool.connect();
       try {
         await client.query('BEGIN');
