@@ -36,6 +36,36 @@ h1 {
   color: #9a6700;
 }
 
+.sort {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: #656d76;
+  font-size: 0.9rem;
+}
+
+.sort button {
+  padding: 0.3rem 0.8rem;
+  border: 1px solid #d0d7de;
+  border-radius: 6px;
+  background: #fff;
+  color: #1f2328;
+  font: inherit;
+  cursor: pointer;
+}
+
+.sort button[aria-pressed='true'] {
+  background: #e60012;
+  border-color: #e60012;
+  color: #fff;
+}
+
+.popularity {
+  font-size: 0.8rem;
+  color: #656d76;
+  margin: 0 0 0.4rem;
+}
+
 .grid {
   list-style: none;
   padding: 0;

@@ -3,6 +3,12 @@ import GameCard from './GameCard.jsx';
 
 const API_URL = import.meta.env.VITE_API_URL ?? '';
 
+const SORTS = {
+  score: { label: 'Ocena', compare: (a, b) => b.criticScore - a.criticScore },
+  // Gry zapisane przed dodaniem rankingu nie mają popularityRank – trafiają na koniec.
+  popularity: { label: 'Popularność', compare: (a, b) => (a.popularityRank ?? Infinity) - (b.popularityRank ?? Infinity) },
+};
+
 const formatDate = (iso) =>
   iso ? new Date(iso).toLocaleString('pl-PL', { dateStyle: 'medium', timeStyle: 'short' }) : '—';
 
@@ -10,6 +16,7 @@ export default function App() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [sort, setSort] = useState('score');
 
   useEffect(() => {
     fetch(`${API_URL}/api/games`)
@@ -48,8 +55,19 @@ export default function App() {
       )}
 
       {data && (
+        <div className="sort" role="group" aria-label="Sortowanie">
+          Sortuj:
+          {Object.entries(SORTS).map(([key, { label }]) => (
+            <button key={key} aria-pressed={sort === key} onClick={() => setSort(key)}>
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {data && (
         <ul className="grid">
-          {data.games.map((game) => (
+          {data.games.toSorted((a, b) => SORTS[sort].compare(a, b) || a.title.localeCompare(b.title)).map((game) => (
             <GameCard key={game.slug} game={game} />
           ))}
         </ul>

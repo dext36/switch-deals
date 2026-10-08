@@ -56,6 +56,11 @@ export default function GameCard({ game }) {
           {game.originalPrice && <s>{game.originalPrice}</s>}
           {game.discount != null && <span className="discount">-{game.discount}%</span>}
         </p>
+        {game.popularityRank && (
+          <p className="popularity" title="Miejsce wśród gier w promocji, według popularności w eShopie Nintendo of Europe">
+            Popularność w eShopie: #{game.popularityRank}
+          </p>
+        )}
         {game.saleEndsAt && <p className="sale-ends">Promocja do {formatDay(game.saleEndsAt)}</p>}
         {game.video ? (
           <p className="video-meta">

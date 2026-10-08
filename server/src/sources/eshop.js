@@ -1,6 +1,7 @@
 import { chunk, fetchJson } from '../http.js';
 
 // Wyszukiwarka Nintendo of Europe (z niej korzysta strona nintendo.com) – lista gier na Switcha w promocji.
+// Wyniki są posortowane po popularności w eShopie, więc kolejność na liście to ranking popularności.
 // Ceny w niej są brytyjskie, dlatego właściwe ceny i to, czy promocja obowiązuje, sprawdzamy w API cen dla danego kraju.
 const SEARCH_URL = 'https://searching.nintendo-europe.com/en/select';
 const PRICE_URL = 'https://api.ec.nintendo.com/v1/price';
@@ -29,6 +30,7 @@ export async function fetchDiscountedGames({ fetchImpl, userAgent } = {}) {
         title: doc.title,
         url: doc.url ? `https://www.nintendo.com${doc.url}` : null,
         image: doc.image_url_h2x1_s || doc.image_url_sq_s || null,
+        popularityRank: games.length + 1,
       });
     }
     if (start + PAGE_SIZE >= response.numFound || response.docs.length === 0) break;

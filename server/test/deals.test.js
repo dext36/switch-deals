@@ -11,7 +11,7 @@ test('normalizeTitle ignores trademarks, punctuation and Switch edition suffixes
 
 test('keeps only well-rated games that are discounted in the selected country', async () => {
   const onSale = [
-    { nsuid: '1', title: 'Hollow Knight', url: 'u1', image: 'i1' },
+    { nsuid: '1', title: 'Hollow Knight', url: 'u1', image: 'i1', popularityRank: 7 },
     { nsuid: '2', title: 'Celeste™', url: 'u2', image: 'i2' },
     { nsuid: '3', title: 'Some Shovelware', url: 'u3', image: 'i3' },
     { nsuid: '4', title: 'Hades', url: 'u4', image: 'i4' },
@@ -41,7 +41,7 @@ test('keeps only well-rated games that are discounted in the selected country', 
   assert.deepEqual(deals[1], {
     slug: '1', title: 'Hollow Knight', url: 'u1', image: 'i1',
     price: '30,50 zł', originalPrice: '61,00 zł', discount: 50, saleEndsAt: '2026-10-30T22:59:59Z',
-    criticScore: 87, criticReviews: 20, igdbUrl: 'igdb/hk',
+    criticScore: 87, criticReviews: 20, popularityRank: 7, igdbUrl: 'igdb/hk',
     igdbGameplayVideoId: 'gp-hk', igdbTrailerVideoId: 'tr-hk',
   });
 });
