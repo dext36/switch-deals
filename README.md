@@ -13,7 +13,7 @@ Backend crawluje listę [najgorętszych gier na Switcha z oceną krytyków 83+ z
 - Jeśli lista się zmieniła, zapisuje nową wersję (`updatedAt`); w każdym przypadku aktualizuje czas sprawdzenia (`checkedAt`).
 - Film z YouTube jest wyszukiwany tylko raz dla każdej gry i zapisywany – wyszukiwanie kosztuje 100 z 10 000 dziennych jednostek YouTube Data API.
 - Gdy Deku Deals jest niedostępne, API zwraca ostatnią zapisaną listę z polem `error`.
-- Dane leżą w `DATA_DIR/games.json` (domyślnie `data/`).
+- Dane trzymane są w Postgresie, gdy ustawione jest `DATABASE_URL` (produkcyjnie [Neon](https://neon.tech)); w przeciwnym razie w pliku `DATA_DIR/games.json` (domyślnie `data/`), co wystarcza lokalnie.
 
 ## Wymagania
 
@@ -33,7 +33,7 @@ Następnie otwórz http://localhost:5173. W trybie dev Vite przekierowuje zapyta
 | Komenda         | Opis                                            |
 | --------------- | ----------------------------------------------- |
 | `npm run dev`   | backend + frontend jednocześnie (hot reload)    |
-| `npm test`      | testy API (`node:test`)                         |
+| `npm test`      | testy backendu (`node:test`); test bazy uruchamia się z `TEST_DATABASE_URL` |
 | `npm run build` | build produkcyjny frontendu do `client/dist`    |
 | `npm start`     | uruchomienie samego backendu                    |
 
@@ -50,7 +50,8 @@ Następnie otwórz http://localhost:5173. W trybie dev Vite przekierowuje zapyta
 - `CORS_ORIGIN` – origin frontendu, który może wołać API (domyślnie dowolny)
 - `YOUTUBE_API_KEY` – klucz [YouTube Data API v3](https://developers.google.com/youtube/v3/getting-started); bez niego zamiast filmów są linki do wyszukiwarki YouTube
 - `CHECK_INTERVAL_MINUTES` – minimalny odstęp między sprawdzeniami Deku Deals (domyślnie `10`)
-- `DATA_DIR` – katalog na zapisane dane (domyślnie `data`)
+- `DATABASE_URL` – adres bazy Postgres; tabele tworzą się same przy starcie
+- `DATA_DIR` – katalog na zapisane dane, gdy nie ma `DATABASE_URL` (domyślnie `data`)
 - `SOURCE_URL` – adres listy do crawlowania (domyślnie lista Deku Deals powyżej)
 - `VITE_API_URL` – adres backendu dla frontendu, gdy jest hostowany osobno (domyślnie ten sam origin)
 
@@ -75,4 +76,10 @@ Plik `render.yaml` to [Render Blueprint](https://render.com/docs/blueprint-spec)
 4. Po wdrożeniu skopiuj adres serwisu (np. `https://switch-deals-api.onrender.com`) i sprawdź `…/api/health`.
 5. Ustaw ten adres jako zmienną `VITE_API_URL` w GitHubie (patrz wyżej) i uruchom ponownie deploy frontendu.
 
-Uwaga: na darmowym planie serwis usypia po ~15 min bezczynności, więc pierwsze zapytanie po przerwie może trwać kilkadziesiąt sekund. Dysk na darmowym planie nie jest trwały – po uśpieniu lub wdrożeniu zapisane dane znikają i lista (oraz filmy) pobierane są od nowa.
+Uwaga: na darmowym planie serwis usypia po ~15 min bezczynności, więc pierwsze zapytanie po przerwie może trwać kilkadziesiąt sekund. Dysk na darmowym planie nie jest trwały, dlatego dane trzymamy w zewnętrznej bazie.
+
+### Baza danych (Neon)
+
+1. Załóż darmowe konto na https://neon.tech i utwórz projekt (region najlepiej **AWS Europe Central (Frankfurt)**, blisko serwisu na Render).
+2. Skopiuj **connection string** (zaczyna się od `postgresql://…` i kończy `?sslmode=require`).
+3. W Render → serwis → **Environment** dodaj zmienną `DATABASE_URL` z tym adresem. Tabele utworzą się przy pierwszym starcie.

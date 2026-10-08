@@ -1,6 +1,13 @@
 import { youtubeSearchUrl } from './sources/youtube.js';
 
-const sameList = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+// Porównanie niezależne od kolejności pól – Postgres (jsonb) nie zachowuje kolejności kluczy.
+const canonical = (value) =>
+  Array.isArray(value)
+    ? value.map(canonical)
+    : value && typeof value === 'object'
+      ? Object.fromEntries(Object.keys(value).sort().map((key) => [key, canonical(value[key])]))
+      : value;
+const sameList = (a, b) => JSON.stringify(canonical(a)) === JSON.stringify(canonical(b));
 
 export function createGameService({ store, crawl, findVideo, checkIntervalMs, now = () => Date.now() }) {
   let refreshing = null;

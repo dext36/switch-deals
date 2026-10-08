@@ -93,3 +93,20 @@ test('stops video lookups after a YouTube error and retries later', async () => 
   await service.getGames();
   assert.deepEqual(Object.keys(store.get().videos), ['a', 'b']);
 });
+
+test('treats a list with reordered object keys as unchanged', async () => {
+  const stored = {
+    checkedAt: new Date(0).toISOString(),
+    updatedAt: new Date(0).toISOString(),
+    games: [{ url: 'https://x/items/a', title: 'A', slug: 'a' }],
+    videos: {},
+  };
+  const service = createGameService({
+    store: memoryStore(stored),
+    crawl: async () => [game('a')],
+    findVideo: null,
+    checkIntervalMs: 1000,
+    now: () => 5000,
+  });
+  assert.equal((await service.getGames()).updatedAt, new Date(0).toISOString());
+});

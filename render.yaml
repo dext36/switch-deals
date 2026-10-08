@@ -20,3 +20,6 @@ services:
       # Klucz YouTube Data API v3 do wyszukiwania gameplayów. Bez niego strona pokaże linki do wyszukiwarki.
       - key: YOUTUBE_API_KEY
         sync: false
+      # Adres połączenia z bazą Postgres (np. Neon). Bez niego dane trzymane są w pliku i znikają po restarcie.
+      - key: DATABASE_URL
+        sync: false
