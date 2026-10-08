@@ -4,6 +4,16 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Switch Deals</title>
+    <script>
+      // Motyw ustawiany przed renderem, żeby strona nie mignęła jasnym tłem. Bez zapisanego wyboru – jak w systemie.
+      try {
+        const saved = localStorage.getItem('theme');
+        document.documentElement.dataset.theme =
+          saved === 'dark' || saved === 'light' ? saved : matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      } catch {
+        document.documentElement.dataset.theme = 'light';
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

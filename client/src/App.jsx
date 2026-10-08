@@ -31,6 +31,24 @@ const SORTS = {
   popularity: { label: 'Popularność', compare: (a, b) => (a.popularityRank ?? Infinity) - (b.popularityRank ?? Infinity) },
 };
 
+// Motyw startowy ustawia skrypt w index.html; przełącznik zapamiętuje wybór w localStorage.
+function useTheme() {
+  const [theme, setTheme] = useState(() => document.documentElement.dataset.theme || 'light');
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+  }, [theme]);
+  const toggle = () => {
+    const next = theme === 'dark' ? 'light' : 'dark';
+    setTheme(next);
+    try {
+      localStorage.setItem('theme', next);
+    } catch {
+      // np. tryb prywatny – motyw działa, tylko nie zostanie zapamiętany
+    }
+  };
+  return [theme, toggle];
+}
+
 const formatDate = (iso) =>
   iso ? new Date(iso).toLocaleString('pl-PL', { dateStyle: 'medium', timeStyle: 'short' }) : '—';
 
@@ -39,6 +57,7 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [sort, setSort] = useState('score');
+  const [theme, toggleTheme] = useTheme();
   const weighted = useMemo(() => weightedCommunityScores(data?.games ?? []), [data]);
 
   useEffect(() => {
@@ -56,7 +75,12 @@ export default function App() {
   return (
     <main>
       <header>
-        <h1>Switch Deals</h1>
+        <div className="header-row">
+          <h1>Switch Deals</h1>
+          <button className="theme-toggle" onClick={toggleTheme} aria-label="Przełącz motyw">
+            {theme === 'dark' ? '☀️ Jasny' : '🌙 Ciemny'}
+          </button>
+        </div>
         <p className="subtitle">
           Gry na Switcha w promocji w polskim eShopie z oceną krytyków 83+ (według{' '}
           <a href="https://www.igdb.com" target="_blank" rel="noreferrer">
