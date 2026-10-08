@@ -25,7 +25,7 @@ test('keeps only well-rated games that are discounted in the selected country', 
   ];
   let pricedIds;
   const deals = await findRatedDeals({
-    fetchDiscountedGames: async () => onSale,
+    onSale,
     fetchTopRated: async () => topRated,
     fetchSalePrices: async (ids) => {
       pricedIds = ids;
@@ -49,7 +49,7 @@ test('keeps only well-rated games that are discounted in the selected country', 
 
 test('matches alternative names from IGDB', async () => {
   const deals = await findRatedDeals({
-    fetchDiscountedGames: async () => [{ nsuid: '9', title: 'Pokémon Scarlet' }],
+    onSale: [{ nsuid: '9', title: 'Pokémon Scarlet' }],
     fetchTopRated: async () => [
       { name: 'Pokémon Scarlet and Violet', alternative_names: [{ name: 'Pokemon Scarlet' }], aggregated_rating: 84 },
     ],
@@ -60,7 +60,7 @@ test('matches alternative names from IGDB', async () => {
 
 test('falls back to the title without an edition suffix', async () => {
   const deals = await findRatedDeals({
-    fetchDiscountedGames: async () => [
+    onSale: [
       { nsuid: '1', title: "Ni no Kuni™ II: Revenant Kingdom - The Prince's Edition" },
       { nsuid: '2', title: 'Arise: A Simple Story - Definitive Edition' },
       { nsuid: '3', title: 'Torchlight III' },

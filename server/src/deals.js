@@ -35,10 +35,9 @@ const MAX_SCREENSHOTS = 8;
 
 const pickGameplay = (videos = []) => videos.find((v) => /gameplay/i.test(v.name ?? '')) ?? null;
 
-// Łączy: gry w promocji (eShop EU) × ocena krytyków (IGDB) × aktualne ceny w danym kraju.
-export async function findRatedDeals({ fetchDiscountedGames, fetchTopRated, fetchSalePrices }) {
-  const [onSale, topRated] = await Promise.all([fetchDiscountedGames(), fetchTopRated()]);
-  const index = indexByTitle(topRated);
+// Łączy: gry w promocji (eShop EU, już pobrane) × ocena krytyków (IGDB) × aktualne ceny w danym kraju.
+export async function findRatedDeals({ onSale, fetchTopRated, fetchSalePrices }) {
+  const index = indexByTitle(await fetchTopRated());
 
   const matched = new Map();
   for (const game of onSale) {

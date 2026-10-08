@@ -27,19 +27,42 @@ function videoFor(game, videos) {
   return null;
 }
 
-export function createGameService({ store, fetchDeals, findVideo, checkIntervalMs, now = () => Date.now() }) {
+// Pełne przeliczenie (IGDB + ceny) jest potrzebne tylko, gdy w promocji pojawiło się coś nowego
+// albo minęło fullRefreshMs. Gdy gry tylko zniknęły z promocji, wystarczy je usunąć z zapisanej listy.
+export function createGameService({
+  store, fetchOnSale, buildDeals, findVideo, checkIntervalMs, fullRefreshMs, now = () => Date.now(),
+}) {
   let refreshing = null;
 
   async function refresh(data) {
-    const games = await fetchDeals();
-    if (games.length === 0) throw new Error('Nie znaleziono żadnych gier spełniających kryteria');
+    const onSale = await fetchOnSale();
+    if (onSale.length === 0) throw new Error('eShop nie zwrócił żadnych gier w promocji');
 
     const checkedAt = new Date(now()).toISOString();
+    const eshopIds = [...new Set(onSale.map((g) => g.nsuid))].sort();
+    const known = new Set(data.eshopIds ?? []);
+    const stale = !data.builtAt || now() - Date.parse(data.builtAt) >= fullRefreshMs;
+    const rebuild = stale || !data.eshopIds || eshopIds.some((id) => !known.has(id));
+
+    let games;
+    if (rebuild) {
+      games = await buildDeals(onSale);
+      if (games.length === 0) throw new Error('Nie znaleziono żadnych gier spełniających kryteria');
+    } else {
+      // Bez nowych pozycji: usuwamy gry, których promocja się skończyła, i aktualizujemy ranking popularności.
+      const rank = new Map(onSale.map((g) => [g.nsuid, g.popularityRank]));
+      games = data.games
+        .filter((g) => rank.has(g.slug))
+        .map((g) => ({ ...g, popularityRank: rank.get(g.slug) ?? g.popularityRank }));
+    }
+
     const changed = !sameList(games, data.games);
     const next = {
       ...data,
       checkedAt,
       updatedAt: changed ? checkedAt : data.updatedAt,
+      builtAt: rebuild ? checkedAt : data.builtAt,
+      eshopIds,
       games,
       videos: { ...data.videos },
     };
@@ -62,7 +85,7 @@ export function createGameService({ store, fetchDeals, findVideo, checkIntervalM
 
   return {
     // Przy każdym zapytaniu sprawdza, czy zapisana lista jest aktualna;
-    // źródła odpytuje najwyżej raz na checkIntervalMs.
+    // eShop odpytuje najwyżej raz na checkIntervalMs.
     async getGames() {
       let data = await store.load();
       let error = null;

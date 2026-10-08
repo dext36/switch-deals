@@ -20,9 +20,10 @@ const igdb = createIgdbClient({ clientId: config.twitchClientId, clientSecret: c
 
 const gameService = createGameService({
   store: config.databaseUrl ? createPgStore(config.databaseUrl) : createFileStore(config.dataFile),
-  fetchDeals: () =>
+  fetchOnSale: () => fetchDiscountedGames({ userAgent }),
+  buildDeals: (onSale) =>
     findRatedDeals({
-      fetchDiscountedGames: () => fetchDiscountedGames({ userAgent }),
+      onSale,
       fetchTopRated: () =>
         igdb.fetchTopRatedSwitchGames({ minScore: config.minCriticScore, minReviews: config.minCriticReviews }),
       fetchSalePrices: (nsuids) => fetchSalePrices(nsuids, { country, userAgent }),
@@ -31,6 +32,7 @@ const gameService = createGameService({
     ? (title) => findGameplayVideo(title, { apiKey: config.youtubeApiKey })
     : null,
   checkIntervalMs: config.checkIntervalMs,
+  fullRefreshMs: config.fullRefreshMs,
 });
 
 const PORT = process.env.PORT || 3001;

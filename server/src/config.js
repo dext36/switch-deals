@@ -9,6 +9,8 @@ export const config = {
   minCriticReviews: number(process.env.MIN_CRITIC_REVIEWS, 3),
   // Najczęściej, jak często backend sprawdza promocje – żeby nie odpytywać API przy każdym wejściu na stronę.
   checkIntervalMs: number(process.env.CHECK_INTERVAL_MINUTES, 30) * 60 * 1000,
+  // Nawet bez nowych promocji co tyle dni lista jest liczona od nowa, żeby odświeżyć oceny z IGDB i ceny.
+  fullRefreshMs: number(process.env.FULL_REFRESH_DAYS, 7) * 24 * 60 * 60 * 1000,
   twitchClientId: process.env.TWITCH_CLIENT_ID || '',
   twitchClientSecret: process.env.TWITCH_CLIENT_SECRET || '',
   youtubeApiKey: process.env.YOUTUBE_API_KEY || '',

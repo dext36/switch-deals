@@ -9,6 +9,13 @@ const memoryStore = (initial) => {
 
 const game = (slug) => ({ slug, title: slug.toUpperCase(), url: `https://x/items/${slug}` });
 
+// Lista z eShopu to same nsuid gier z listy; buildDeals zwraca gotową listę.
+const sources = (getList) => ({
+  fetchOnSale: async () => getList().map((g) => ({ nsuid: g.slug })),
+  buildDeals: async () => getList(),
+  fullRefreshMs: 1e9,
+});
+
 test('crawls on first request and looks up videos once per game', async () => {
   let clock = 0;
   let list = [game('a'), game('b')];
@@ -16,7 +23,7 @@ test('crawls on first request and looks up videos once per game', async () => {
   const store = memoryStore();
   const service = createGameService({
     store,
-    fetchDeals: async () => list,
+    ...sources(() => list),
     findVideo: async (title) => (searched.push(title), { id: `vid-${title}` }),
     checkIntervalMs: 1000,
     now: () => clock,
@@ -45,7 +52,7 @@ test('keeps updatedAt when the list did not change', async () => {
   let clock = 0;
   const service = createGameService({
     store: memoryStore(),
-    fetchDeals: async () => [game('a')],
+    ...sources(() => [game('a')]),
     findVideo: null,
     checkIntervalMs: 1000,
     now: () => clock,
@@ -62,7 +69,7 @@ test('serves stored data with an error when crawling fails', async () => {
   const stored = { checkedAt: new Date(0).toISOString(), updatedAt: null, games: [game('a')], videos: {} };
   const service = createGameService({
     store: memoryStore(stored),
-    fetchDeals: async () => { throw new Error('HTTP 503'); },
+    fetchOnSale: async () => { throw new Error('HTTP 503'); },
     findVideo: null,
     checkIntervalMs: 1000,
     now: () => 10_000,
@@ -78,7 +85,7 @@ test('stops video lookups after a YouTube error and retries later', async () => 
   const store = memoryStore();
   const service = createGameService({
     store,
-    fetchDeals: async () => [game('a'), game('b')],
+    ...sources(() => [game('a'), game('b')]),
     findVideo: async (title) => {
       if (fail) throw new Error('quota');
       return { id: title };
@@ -103,7 +110,7 @@ test('treats a list with reordered object keys as unchanged', async () => {
   };
   const service = createGameService({
     store: memoryStore(stored),
-    fetchDeals: async () => [game('a')],
+    ...sources(() => [game('a')]),
     findVideo: null,
     checkIntervalMs: 1000,
     now: () => 5000,
@@ -115,11 +122,11 @@ test('prefers IGDB gameplay, then YouTube search, then IGDB trailer', async () =
   const searched = [];
   const service = createGameService({
     store: memoryStore(),
-    fetchDeals: async () => [
+    ...sources(() => [
       { ...game('a'), igdbGameplayVideoId: 'gp-a', igdbTrailerVideoId: 'tr-a' },
       { ...game('b'), igdbGameplayVideoId: null, igdbTrailerVideoId: 'tr-b' },
       { ...game('c'), igdbGameplayVideoId: null, igdbTrailerVideoId: 'tr-c' },
-    ],
+    ]),
     findVideo: async (title) => (searched.push(title), title === 'B' ? { id: 'yt-b' } : null),
     checkIntervalMs: 1000,
   });
@@ -132,7 +139,7 @@ test('prefers IGDB gameplay, then YouTube search, then IGDB trailer', async () =
 test('builds IGDB screenshot URLs and hides the stored ids', async () => {
   const service = createGameService({
     store: memoryStore(),
-    fetchDeals: async () => [{ ...game('a'), screenshotIds: ['sc1', 'sc2'] }, game('b')],
+    ...sources(() => [{ ...game('a'), screenshotIds: ['sc1', 'sc2'] }, game('b')]),
     checkIntervalMs: 1000,
   });
   const { games } = await service.getGames();
@@ -142,4 +149,62 @@ test('builds IGDB screenshot URLs and hides the stored ids', async () => {
   ]);
   assert.equal(games[0].screenshotIds, undefined);
   assert.deepEqual(games[1].screenshots, []);
+});
+
+test('skips IGDB and price lookups when eShop has nothing new', async () => {
+  let clock = 0;
+  let onSale = [{ nsuid: 'a', popularityRank: 1 }, { nsuid: 'b', popularityRank: 2 }, { nsuid: 'x', popularityRank: 3 }];
+  let builds = 0;
+  const service = createGameService({
+    store: memoryStore(),
+    fetchOnSale: async () => onSale,
+    buildDeals: async (items) => (builds++, items.filter((g) => g.nsuid !== 'x').map((g) => ({ ...game(g.nsuid), popularityRank: g.popularityRank }))),
+    checkIntervalMs: 1000,
+    fullRefreshMs: 100_000,
+    now: () => clock,
+  });
+  await service.getGames();
+  assert.equal(builds, 1);
+
+  // Ta sama lista w innej kolejności – tylko nowy ranking popularności.
+  onSale = [{ nsuid: 'b', popularityRank: 1 }, { nsuid: 'x', popularityRank: 2 }, { nsuid: 'a', popularityRank: 3 }];
+  clock = 2000;
+  let result = await service.getGames();
+  assert.equal(builds, 1);
+  assert.deepEqual(result.games.map((g) => [g.slug, g.popularityRank]), [['a', 3], ['b', 1]]);
+
+  // Promocja na „a” się skończyła – usuwamy ją bez przeliczania.
+  onSale = [{ nsuid: 'b', popularityRank: 1 }, { nsuid: 'x', popularityRank: 2 }];
+  clock = 4000;
+  result = await service.getGames();
+  assert.equal(builds, 1);
+  assert.deepEqual(result.games.map((g) => g.slug), ['b']);
+  assert.equal(result.updatedAt, new Date(4000).toISOString());
+
+  // Nowa pozycja w eShopie → pełne przeliczenie.
+  onSale = [...onSale, { nsuid: 'c', popularityRank: 3 }];
+  clock = 6000;
+  result = await service.getGames();
+  assert.equal(builds, 2);
+  assert.deepEqual(result.games.map((g) => g.slug), ['b', 'c']);
+
+  // Bez zmian, ale po fullRefreshMs od ostatniego przeliczenia → pełne przeliczenie.
+  clock = 6000 + 100_000;
+  await service.getGames();
+  assert.equal(builds, 3);
+});
+
+test('rebuilds stored data saved before eShop ids were tracked', async () => {
+  let builds = 0;
+  const stored = { checkedAt: new Date(0).toISOString(), updatedAt: null, games: [game('a')], videos: {} };
+  const service = createGameService({
+    store: memoryStore(stored),
+    fetchOnSale: async () => [{ nsuid: 'a' }],
+    buildDeals: async () => (builds++, [game('a')]),
+    checkIntervalMs: 1000,
+    fullRefreshMs: 1e9,
+    now: () => 10_000,
+  });
+  await service.getGames();
+  assert.equal(builds, 1);
 });
