@@ -17,3 +17,6 @@ services:
       # Adres frontendu, który może wołać API (CORS). Puste = dowolny origin.
       - key: CORS_ORIGIN
         sync: false
+      # Klucz YouTube Data API v3 do wyszukiwania gameplayów. Bez niego strona pokaże linki do wyszukiwarki.
+      - key: YOUTUBE_API_KEY
+        sync: false

@@ -1,55 +1,58 @@
 import { useEffect, useState } from 'react';
+import GameCard from './GameCard.jsx';
 
 const API_URL = import.meta.env.VITE_API_URL ?? '';
 
-const formatPrice = (value) =>
-  value.toLocaleString('pl-PL', { style: 'currency', currency: 'PLN' });
+const formatDate = (iso) =>
+  iso ? new Date(iso).toLocaleString('pl-PL', { dateStyle: 'medium', timeStyle: 'short' }) : '—';
 
 export default function App() {
-  const [deals, setDeals] = useState([]);
+  const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetch(`${API_URL}/api/deals`)
-      .then((res) => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json();
+    fetch(`${API_URL}/api/games`)
+      .then(async (res) => {
+        const body = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(body.error || `HTTP ${res.status}`);
+        return body;
       })
-      .then(setDeals)
+      .then(setData)
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
   }, []);
 
   return (
     <main>
-      <h1>Switch Deals</h1>
-      <p className="subtitle">Promocje pobrane z backendu (Express)</p>
+      <header>
+        <h1>Switch Deals</h1>
+        <p className="subtitle">
+          Najgorętsze gry na Switcha z oceną krytyków 83+ według{' '}
+          <a href="https://www.dekudeals.com/hottest" target="_blank" rel="noreferrer">
+            Deku Deals
+          </a>
+          , z gameplayem z YouTube.
+        </p>
+        {data && (
+          <p className="meta">
+            Sprawdzono: {formatDate(data.checkedAt)} · Lista zmieniła się: {formatDate(data.updatedAt)}
+          </p>
+        )}
+      </header>
 
-      {loading && <p>Ładowanie…</p>}
+      {loading && <p>Ładowanie… (pierwsze pobranie listy może potrwać do minuty)</p>}
       {error && <p className="error">Nie udało się pobrać danych: {error}</p>}
+      {data?.error && (
+        <p className="warning">Nie udało się odświeżyć listy ({data.error}) – pokazuję ostatnią zapisaną wersję.</p>
+      )}
 
-      {!loading && !error && (
-        <table>
-          <thead>
-            <tr>
-              <th>Gra</th>
-              <th>Cena</th>
-              <th>Promocja</th>
-              <th>Zniżka</th>
-            </tr>
-          </thead>
-          <tbody>
-            {deals.map((deal) => (
-              <tr key={deal.id}>
-                <td>{deal.title}</td>
-                <td className="old">{formatPrice(deal.price)}</td>
-                <td>{formatPrice(deal.salePrice)}</td>
-                <td className="discount">-{deal.discount}%</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      {data && (
+        <ul className="grid">
+          {data.games.map((game) => (
+            <GameCard key={game.slug} game={game} />
+          ))}
+        </ul>
       )}
     </main>
   );

@@ -5,7 +5,15 @@ Testowy projekt full-stack w JavaScript:
 - **server/** – backend w [Express](https://expressjs.com/) (port `3001`)
 - **client/** – frontend w [React](https://react.dev/) + [Vite](https://vite.dev/) (port `5173`)
 
-Frontend pobiera listę promocji z endpointu `GET /api/deals` i wyświetla ją w tabeli.
+Backend crawluje listę [najgorętszych gier na Switcha z oceną krytyków 83+ z Deku Deals](https://www.dekudeals.com/hottest?filter%5Bcritic_score%5D=83&filter%5Bplatform%5D=switch), zapisuje ją i do każdej gry wyszukuje gameplay na YouTube. Frontend pokazuje listę gier z filmami.
+
+### Jak działa odświeżanie
+
+- Przy każdym zapytaniu o listę backend sprawdza, czy zapisana wersja jest aktualna. Deku Deals odpytuje najwyżej raz na `CHECK_INTERVAL_MINUTES` (domyślnie 10 min), żeby nie obciążać ich strony.
+- Jeśli lista się zmieniła, zapisuje nową wersję (`updatedAt`); w każdym przypadku aktualizuje czas sprawdzenia (`checkedAt`).
+- Film z YouTube jest wyszukiwany tylko raz dla każdej gry i zapisywany – wyszukiwanie kosztuje 100 z 10 000 dziennych jednostek YouTube Data API.
+- Gdy Deku Deals jest niedostępne, API zwraca ostatnią zapisaną listę z polem `error`.
+- Dane leżą w `DATA_DIR/games.json` (domyślnie `data/`).
 
 ## Wymagania
 
@@ -34,12 +42,16 @@ Następnie otwórz http://localhost:5173. W trybie dev Vite przekierowuje zapyta
 | Endpoint          | Opis                         |
 | ----------------- | ---------------------------- |
 | `GET /api/health` | status serwera               |
-| `GET /api/deals`  | lista promocji (dane testowe)|
+| `GET /api/games`  | lista gier z filmami         |
 
 ## Konfiguracja
 
 - `PORT` – port backendu (domyślnie `3001`)
 - `CORS_ORIGIN` – origin frontendu, który może wołać API (domyślnie dowolny)
+- `YOUTUBE_API_KEY` – klucz [YouTube Data API v3](https://developers.google.com/youtube/v3/getting-started); bez niego zamiast filmów są linki do wyszukiwarki YouTube
+- `CHECK_INTERVAL_MINUTES` – minimalny odstęp między sprawdzeniami Deku Deals (domyślnie `10`)
+- `DATA_DIR` – katalog na zapisane dane (domyślnie `data`)
+- `SOURCE_URL` – adres listy do crawlowania (domyślnie lista Deku Deals powyżej)
 - `VITE_API_URL` – adres backendu dla frontendu, gdy jest hostowany osobno (domyślnie ten sam origin)
 
 ## Deploy na GitHub Pages
@@ -63,4 +75,4 @@ Plik `render.yaml` to [Render Blueprint](https://render.com/docs/blueprint-spec)
 4. Po wdrożeniu skopiuj adres serwisu (np. `https://switch-deals-api.onrender.com`) i sprawdź `…/api/health`.
 5. Ustaw ten adres jako zmienną `VITE_API_URL` w GitHubie (patrz wyżej) i uruchom ponownie deploy frontendu.
 
-Uwaga: na darmowym planie serwis usypia po ~15 min bezczynności, więc pierwsze zapytanie po przerwie może trwać kilkadziesiąt sekund.
+Uwaga: na darmowym planie serwis usypia po ~15 min bezczynności, więc pierwsze zapytanie po przerwie może trwać kilkadziesiąt sekund. Dysk na darmowym planie nie jest trwały – po uśpieniu lub wdrożeniu zapisane dane znikają i lista (oraz filmy) pobierane są od nowa.
