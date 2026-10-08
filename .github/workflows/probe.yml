@@ -1,0 +1,15 @@
+# Tymczasowa diagnostyka źródeł danych – do usunięcia po weryfikacji.
+name: Probe data sources
+on:
+  push:
+    branches: [claude/express-react-test-project-nsvd7k]
+    paths: [.github/workflows/probe.yml, scripts/probe.mjs]
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node scripts/probe.mjs
