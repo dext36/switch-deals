@@ -56,3 +56,20 @@ test('matches alternative names from IGDB', async () => {
   });
   assert.equal(deals.length, 1);
 });
+
+test('falls back to the title without an edition suffix', async () => {
+  const deals = await findRatedDeals({
+    fetchDiscountedGames: async () => [
+      { nsuid: '1', title: "Ni no Kuni™ II: Revenant Kingdom - The Prince's Edition" },
+      { nsuid: '2', title: 'Arise: A Simple Story - Definitive Edition' },
+      { nsuid: '3', title: 'Torchlight III' },
+    ],
+    fetchTopRated: async () => [
+      { name: 'Ni no Kuni II: Revenant Kingdom', aggregated_rating: 85 },
+      { name: 'Arise: A Simple Story', aggregated_rating: 84 },
+      { name: 'Torchlight II', aggregated_rating: 86 },
+    ],
+    fetchSalePrices: async (ids) => new Map(ids.map((id) => [id, { price: '1', originalPrice: '2', discount: 50, saleEndsAt: null }])),
+  });
+  assert.deepEqual(deals.map((d) => d.slug).sort(), ['1', '2']);
+});

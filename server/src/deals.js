@@ -12,6 +12,9 @@ export function normalizeTitle(title) {
     .trim();
 }
 
+// „Ni no Kuni II: Revenant Kingdom - The Prince's Edition” → „Ni no Kuni II: Revenant Kingdom”.
+const withoutEdition = (title) => title.replace(/\s+[-–—:]\s+[^-–—:]*\bedition\s*$/i, '');
+
 function indexByTitle(igdbGames) {
   const index = new Map();
   for (const game of igdbGames) {
@@ -37,7 +40,7 @@ export async function findRatedDeals({ fetchDiscountedGames, fetchTopRated, fetc
 
   const matched = new Map();
   for (const game of onSale) {
-    const igdb = index.get(normalizeTitle(game.title));
+    const igdb = index.get(normalizeTitle(game.title)) ?? index.get(normalizeTitle(withoutEdition(game.title)));
     if (igdb && !matched.has(game.nsuid)) matched.set(game.nsuid, { game, igdb });
   }
 
