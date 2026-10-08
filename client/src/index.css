@@ -1,7 +1,41 @@
 :root {
+  --text: #1f2328;
+  --muted: #656d76;
+  --bg: #f6f8fa;
+  --surface: #fff;
+  --border: #d0d7de;
+  --brand: #e60012;
+  --link: #0969da;
+  --error: #cf222e;
+  --warning: #9a6700;
+  --positive: #1a7f37;
+  --badge: #1a7f37;
+
+  color-scheme: light;
   font-family: system-ui, sans-serif;
-  color: #1f2328;
-  background: #f6f8fa;
+  color: var(--text);
+  background: var(--bg);
+}
+
+/* Motyw ustawiany w index.html (zapisany wybór albo ustawienie systemu) i przełącznikiem w nagłówku. */
+:root[data-theme='dark'] {
+  --text: #e6edf3;
+  --muted: #8d96a0;
+  --bg: #0d1117;
+  --surface: #161b22;
+  --border: #30363d;
+  --brand: #ff3b47;
+  --link: #4493f8;
+  --error: #f85149;
+  --warning: #d29922;
+  --positive: #3fb950;
+  --badge: #238636;
+
+  color-scheme: dark;
+}
+
+a {
+  color: var(--link);
 }
 
 body {
@@ -14,14 +48,21 @@ main {
   padding: 2rem 1rem;
 }
 
+.header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
 h1 {
   margin-bottom: 0;
-  color: #e60012;
+  color: var(--brand);
 }
 
 .subtitle,
 .meta {
-  color: #656d76;
+  color: var(--muted);
 }
 
 .meta {
@@ -29,27 +70,28 @@ h1 {
 }
 
 .error {
-  color: #cf222e;
+  color: var(--error);
 }
 
 .warning {
-  color: #9a6700;
+  color: var(--warning);
 }
 
 .sort {
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  color: #656d76;
+  color: var(--muted);
   font-size: 0.9rem;
 }
 
+.theme-toggle,
 .sort button {
   padding: 0.3rem 0.8rem;
-  border: 1px solid #d0d7de;
+  border: 1px solid var(--border);
   border-radius: 6px;
-  background: #fff;
-  color: #1f2328;
+  background: var(--surface);
+  color: var(--text);
   font: inherit;
   cursor: pointer;
 }
@@ -63,7 +105,7 @@ h1 {
 .community,
 .popularity {
   font-size: 0.8rem;
-  color: #656d76;
+  color: var(--muted);
   margin: 0 0 0.4rem;
 }
 
@@ -76,8 +118,8 @@ h1 {
 }
 
 .card {
-  background: #fff;
-  border: 1px solid #d0d7de;
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 8px;
   overflow: hidden;
   display: flex;
@@ -202,7 +244,7 @@ h1 {
   min-width: 2.2rem;
   padding: 0.15rem 0.4rem;
   border-radius: 6px;
-  background: #1a7f37;
+  background: var(--badge);
   color: #fff;
   font-weight: bold;
   text-align: center;
@@ -211,7 +253,7 @@ h1 {
 
 .sale-ends {
   font-size: 0.8rem;
-  color: #9a6700;
+  color: var(--warning);
   margin: 0 0 0.4rem;
 }
 
@@ -228,21 +270,26 @@ h1 {
 }
 
 .prices s {
-  color: #656d76;
+  color: var(--muted);
 }
 
 .discount {
   font-weight: bold;
-  color: #1a7f37;
+  color: var(--positive);
 }
 
 .video-meta {
   font-size: 0.8rem;
-  color: #656d76;
+  color: var(--muted);
   margin: 0;
 }
 
 .yt-link {
   font-size: 0.85rem;
-  color: #cf222e;
+  color: var(--error);
+}
+
+.theme-toggle {
+  flex: none;
+  margin-top: 1.3rem;
 }
