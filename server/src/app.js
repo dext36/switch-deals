@@ -4,7 +4,8 @@ import { deals } from './data.js';
 
 export const app = express();
 
-app.use(cors());
+// CORS_ORIGIN (np. https://dext36.github.io) ogranicza dostęp do API; bez niego – dowolny origin.
+app.use(cors({ origin: process.env.CORS_ORIGIN || '*' }));
 app.use(express.json());
 
 app.get('/api/health', (req, res) => {

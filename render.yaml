@@ -1,0 +1,19 @@
+# Render Blueprint – backend Express jako Web Service.
+# https://render.com/docs/blueprint-spec
+services:
+  - type: web
+    name: switch-deals-api
+    runtime: node
+    plan: free
+    region: frankfurt
+    branch: main
+    buildCommand: npm ci -w server
+    startCommand: npm start -w server
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      # Adres frontendu, który może wołać API (CORS). Puste = dowolny origin.
+      - key: CORS_ORIGIN
+        sync: false

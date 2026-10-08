@@ -39,6 +39,7 @@ Następnie otwórz http://localhost:5173. W trybie dev Vite przekierowuje zapyta
 ## Konfiguracja
 
 - `PORT` – port backendu (domyślnie `3001`)
+- `CORS_ORIGIN` – origin frontendu, który może wołać API (domyślnie dowolny)
 - `VITE_API_URL` – adres backendu dla frontendu, gdy jest hostowany osobno (domyślnie ten sam origin)
 
 ## Deploy na GitHub Pages
@@ -51,3 +52,15 @@ Jednorazowa konfiguracja w repozytorium:
 2. GitHub Pages hostuje tylko pliki statyczne, więc backend trzeba wdrożyć osobno (np. Render, Railway, Fly.io). Jego adres ustaw w **Settings → Secrets and variables → Actions → Variables** jako `VITE_API_URL` (np. `https://switch-deals-api.onrender.com`), a potem uruchom deploy ponownie.
 
 Bez `VITE_API_URL` strona się wyświetli, ale pokaże błąd pobierania danych.
+
+## Deploy backendu na Render
+
+Plik `render.yaml` to [Render Blueprint](https://render.com/docs/blueprint-spec) opisujący backend jako Web Service (plan free, region Frankfurt, auto-deploy z `main`).
+
+1. Zaloguj się na https://render.com i połącz konto GitHub.
+2. **New → Blueprint**, wybierz repozytorium `switch-deals` i zatwierdź.
+3. Render zapyta o `CORS_ORIGIN` – wpisz `https://dext36.github.io` (albo zostaw puste, żeby nie ograniczać).
+4. Po wdrożeniu skopiuj adres serwisu (np. `https://switch-deals-api.onrender.com`) i sprawdź `…/api/health`.
+5. Ustaw ten adres jako zmienną `VITE_API_URL` w GitHubie (patrz wyżej) i uruchom ponownie deploy frontendu.
+
+Uwaga: na darmowym planie serwis usypia po ~15 min bezczynności, więc pierwsze zapytanie po przerwie może trwać kilkadziesiąt sekund.
