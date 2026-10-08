@@ -1,0 +1,22 @@
+# Tymczasowa diagnostyka parsera Deku Deals – do usunięcia po weryfikacji.
+name: Probe Deku Deals
+
+on:
+  push:
+    branches: [claude/express-react-test-project-nsvd7k]
+    paths:
+      - .github/workflows/probe-dekudeals.yml
+      - scripts/probe-dekudeals.mjs
+      - server/src/sources/**
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci -w server
+      - run: node scripts/probe-dekudeals.mjs
