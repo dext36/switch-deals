@@ -58,6 +58,10 @@ export async function findRatedDeals({ fetchDiscountedGames, fetchTopRated, fetc
       ...price,
       criticScore: Math.round(igdb.aggregated_rating),
       criticReviews: igdb.aggregated_rating_count ?? null,
+      // Ocena społeczności – średnia z ocen użytkowników IGDB.
+      communityScore: igdb.rating != null ? Math.round(igdb.rating) : null,
+      communityRatings: igdb.rating_count ?? null,
+      popularityRank: game.popularityRank ?? null,
       igdbUrl: igdb.url ?? null,
       igdbGameplayVideoId: gameplay?.video_id ?? null,
       igdbTrailerVideoId: igdb.videos?.[0]?.video_id ?? null,

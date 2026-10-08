@@ -33,7 +33,7 @@ export function createIgdbClient({ clientId, clientSecret, fetchImpl, now = () =
       const games = [];
       for (let offset = 0; ; offset += PAGE_SIZE) {
         const page = await query(
-          'fields name, alternative_names.name, aggregated_rating, aggregated_rating_count, url, videos.video_id, videos.name;' +
+          'fields name, alternative_names.name, aggregated_rating, aggregated_rating_count, rating, rating_count, url, videos.video_id, videos.name;' +
             ` where platforms = ${SWITCH_PLATFORMS} & aggregated_rating >= ${minScore} & aggregated_rating_count >= ${minReviews};` +
             ` sort id asc; limit ${PAGE_SIZE}; offset ${offset};`,
         );

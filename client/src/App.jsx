@@ -1,7 +1,35 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import GameCard from './GameCard.jsx';
 
 const API_URL = import.meta.env.VITE_API_URL ?? '';
+
+// Średnia ważona liczbą ocen (jak w rankingu IMDb): gra z kilkoma ocenami jest ciągnięta do typowej oceny w IGDB,
+// więc wysoko są gry dobrze oceniane przez wielu graczy. Siła ciągnięcia to mediana liczby ocen na liście.
+// Nie używamy średniej z listy – są na niej same gry 83+, więc gra z kilkoma ocenami wciąż byłaby wysoko.
+const TYPICAL_COMMUNITY_SCORE = 70;
+
+function weightedCommunityScores(games) {
+  const rated = games.filter((g) => g.communityScore != null && g.communityRatings > 0);
+  const scores = new Map();
+  if (rated.length === 0) return scores;
+  const counts = rated.map((g) => g.communityRatings).sort((a, b) => a - b);
+  const prior = counts[Math.floor(counts.length / 2)];
+  for (const g of rated) {
+    scores.set(g.slug, (g.communityScore * g.communityRatings + TYPICAL_COMMUNITY_SCORE * prior) / (g.communityRatings + prior));
+  }
+  return scores;
+}
+
+const SORTS = {
+  score: { label: 'Ocena krytyków', compare: (a, b) => b.criticScore - a.criticScore },
+  community: {
+    label: 'Ocena graczy',
+    // Gry bez ocen graczy trafiają na koniec.
+    compare: (a, b, weighted) => (weighted.get(b.slug) ?? -Infinity) - (weighted.get(a.slug) ?? -Infinity),
+  },
+  // Gry zapisane przed dodaniem rankingu nie mają popularityRank – trafiają na koniec.
+  popularity: { label: 'Popularność', compare: (a, b) => (a.popularityRank ?? Infinity) - (b.popularityRank ?? Infinity) },
+};
 
 const formatDate = (iso) =>
   iso ? new Date(iso).toLocaleString('pl-PL', { dateStyle: 'medium', timeStyle: 'short' }) : '—';
@@ -10,6 +38,8 @@ export default function App() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [sort, setSort] = useState('score');
+  const weighted = useMemo(() => weightedCommunityScores(data?.games ?? []), [data]);
 
   useEffect(() => {
     fetch(`${API_URL}/api/games`)
@@ -48,8 +78,19 @@ export default function App() {
       )}
 
       {data && (
+        <div className="sort" role="group" aria-label="Sortowanie">
+          Sortuj:
+          {Object.entries(SORTS).map(([key, { label }]) => (
+            <button key={key} aria-pressed={sort === key} onClick={() => setSort(key)}>
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {data && (
         <ul className="grid">
-          {data.games.map((game) => (
+          {data.games.toSorted((a, b) => SORTS[sort].compare(a, b, weighted) || a.title.localeCompare(b.title)).map((game) => (
             <GameCard key={game.slug} game={game} />
           ))}
         </ul>
