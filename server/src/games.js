@@ -16,6 +16,9 @@ const igdbVideo = (id, title) => ({
   thumbnail: `https://i.ytimg.com/vi/${id}/hqdefault.jpg`,
 });
 
+// Screeny z IGDB – zapisujemy tylko identyfikatory, obrazki ładują się z CDN IGDB.
+const screenshotUrl = (id) => `https://images.igdb.com/igdb/image/upload/t_screenshot_big/${id}.jpg`;
+
 // Kolejność: gameplay z IGDB → film znaleziony w YouTube → zwiastun z IGDB.
 function videoFor(game, videos) {
   if (game.igdbGameplayVideoId) return igdbVideo(game.igdbGameplayVideoId, `${game.title} – gameplay`);
@@ -81,8 +84,9 @@ export function createGameService({ store, fetchDeals, findVideo, checkIntervalM
         checkedAt: data.checkedAt,
         updatedAt: data.updatedAt,
         error,
-        games: data.games.map(({ igdbGameplayVideoId, igdbTrailerVideoId, ...game }) => ({
+        games: data.games.map(({ igdbGameplayVideoId, igdbTrailerVideoId, screenshotIds = [], ...game }) => ({
           ...game,
+          screenshots: screenshotIds.map(screenshotUrl),
           video: videoFor({ ...game, igdbGameplayVideoId, igdbTrailerVideoId }, data.videos),
           youtubeSearchUrl: youtubeSearchUrl(game.title),
         })),

@@ -5,7 +5,7 @@ Testowy projekt full-stack w JavaScript:
 - **server/** – backend w [Express](https://expressjs.com/) (port `3001`)
 - **client/** – frontend w [React](https://react.dev/) + [Vite](https://vite.dev/) (port `5173`)
 
-Backend zbiera gry na Switcha, które są **aktualnie w promocji w eShopie** i mają **ocenę krytyków co najmniej 83**, i do każdej dobiera gameplay z YouTube. Frontend pokazuje listę gier z filmami.
+Backend zbiera gry na Switcha, które są **aktualnie w promocji w eShopie** i mają **ocenę krytyków co najmniej 83**, i do każdej dobiera gameplay z YouTube. Frontend pokazuje listę gier z karuzelą: film jako pierwszy slajd, dalej screeny z gry.
 
 ### Skąd są dane
 
@@ -15,6 +15,7 @@ Backend zbiera gry na Switcha, które są **aktualnie w promocji w eShopie** i m
 4. **Popularność** – wyszukiwarka eShopu zwraca promocje posortowane po popularności, więc pozycja gry na tej liście to jej miejsce w rankingu (`popularityRank`).
 5. **Ocena graczy** – średnia z ocen użytkowników IGDB (`rating`, `rating_count`). Przy sortowaniu po niej liczy się też liczba ocen: ocena gry jest ważona jak w rankingu IMDb (ciągnięta do typowej oceny 70 z siłą równą medianie liczby ocen na liście), więc gra z kilkoma ocenami nie wyprzedzi gry ocenionej podobnie przez setki graczy.
 6. **Filmy** – najpierw film „gameplay” z IGDB, potem wyszukiwanie w YouTube Data API, a na końcu zwiastun z IGDB. Gdy nic nie ma, strona pokazuje link do wyszukiwarki YouTube.
+7. **Screeny** – do 8 screenów z IGDB (`screenshots`). Zapisywane są tylko ich identyfikatory (razem z listą gier), a obrazki ładują się bezpośrednio z CDN IGDB (`images.igdb.com`, rozmiar `t_screenshot_big`). IGDB nie rozróżnia platform, więc część screenów może pochodzić z innej wersji niż na Switcha.
 
 Na stronie można przełączać sortowanie: ocena krytyków / ocena graczy / popularność.
 

@@ -128,3 +128,18 @@ test('prefers IGDB gameplay, then YouTube search, then IGDB trailer', async () =
   assert.deepEqual(games.map((g) => g.video?.id), ['gp-a', 'yt-b', 'tr-c']);
   assert.equal(games[0].igdbGameplayVideoId, undefined);
 });
+
+test('builds IGDB screenshot URLs and hides the stored ids', async () => {
+  const service = createGameService({
+    store: memoryStore(),
+    fetchDeals: async () => [{ ...game('a'), screenshotIds: ['sc1', 'sc2'] }, game('b')],
+    checkIntervalMs: 1000,
+  });
+  const { games } = await service.getGames();
+  assert.deepEqual(games[0].screenshots, [
+    'https://images.igdb.com/igdb/image/upload/t_screenshot_big/sc1.jpg',
+    'https://images.igdb.com/igdb/image/upload/t_screenshot_big/sc2.jpg',
+  ]);
+  assert.equal(games[0].screenshotIds, undefined);
+  assert.deepEqual(games[1].screenshots, []);
+});

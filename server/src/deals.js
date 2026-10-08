@@ -31,6 +31,8 @@ function indexByTitle(igdbGames) {
   return index;
 }
 
+const MAX_SCREENSHOTS = 8;
+
 const pickGameplay = (videos = []) => videos.find((v) => /gameplay/i.test(v.name ?? '')) ?? null;
 
 // Łączy: gry w promocji (eShop EU) × ocena krytyków (IGDB) × aktualne ceny w danym kraju.
@@ -65,6 +67,7 @@ export async function findRatedDeals({ fetchDiscountedGames, fetchTopRated, fetc
       igdbUrl: igdb.url ?? null,
       igdbGameplayVideoId: gameplay?.video_id ?? null,
       igdbTrailerVideoId: igdb.videos?.[0]?.video_id ?? null,
+      screenshotIds: (igdb.screenshots ?? []).map((s) => s.image_id).filter(Boolean).slice(0, MAX_SCREENSHOTS),
     });
   }
 

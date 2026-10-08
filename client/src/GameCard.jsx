@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 function Video({ video, title }) {
   const [playing, setPlaying] = useState(false);
@@ -22,14 +22,64 @@ function Video({ video, title }) {
   );
 }
 
+// Film (jeśli jest) jako pierwszy slajd, dalej screeny z IGDB; przewijanie w poziomie ze scroll-snap.
+function Carousel({ video, screenshots, title }) {
+  const track = useRef(null);
+  const [index, setIndex] = useState(0);
+  const count = (video ? 1 : 0) + screenshots.length;
+
+  const goTo = (i) => {
+    const el = track.current;
+    el.scrollTo({ left: i * el.clientWidth, behavior: 'smooth' });
+  };
+  const onScroll = () => {
+    const el = track.current;
+    setIndex(Math.round(el.scrollLeft / el.clientWidth));
+  };
+
+  return (
+    <div className="carousel">
+      <div className="track" ref={track} onScroll={onScroll}>
+        {video && (
+          <div className="slide">
+            <Video video={video} title={title} />
+          </div>
+        )}
+        {screenshots.map((src, i) => (
+          <div className="slide" key={src}>
+            <img src={src} alt={`${title} – screen ${i + 1}`} loading="lazy" />
+          </div>
+        ))}
+      </div>
+      {count > 1 && (
+        <>
+          {index > 0 && (
+            <button className="nav prev" onClick={() => goTo(index - 1)} aria-label="Poprzedni">
+              ‹
+            </button>
+          )}
+          {index < count - 1 && (
+            <button className="nav next" onClick={() => goTo(index + 1)} aria-label="Następny">
+              ›
+            </button>
+          )}
+          <span className="counter">
+            {index + 1} / {count}
+          </span>
+        </>
+      )}
+    </div>
+  );
+}
+
 const formatDay = (iso) => new Date(iso).toLocaleDateString('pl-PL', { day: 'numeric', month: 'long' });
 
 export default function GameCard({ game }) {
   return (
     <li className="card">
       <div className="media">
-        {game.video ? (
-          <Video video={game.video} title={game.title} />
+        {game.video || game.screenshots?.length ? (
+          <Carousel video={game.video} screenshots={game.screenshots ?? []} title={game.title} />
         ) : (
           game.image && <img src={game.image} alt="" loading="lazy" />
         )}
