@@ -11,13 +11,13 @@ test('normalizeTitle ignores trademarks, punctuation and Switch edition suffixes
 
 test('keeps only well-rated games that are discounted in the selected country', async () => {
   const onSale = [
-    { nsuid: '1', title: 'Hollow Knight', url: 'u1', image: 'i1' },
+    { nsuid: '1', title: 'Hollow Knight', url: 'u1', image: 'i1', popularityRank: 7 },
     { nsuid: '2', title: 'Celeste™', url: 'u2', image: 'i2' },
     { nsuid: '3', title: 'Some Shovelware', url: 'u3', image: 'i3' },
     { nsuid: '4', title: 'Hades', url: 'u4', image: 'i4' },
   ];
   const topRated = [
-    { name: 'Hollow Knight', aggregated_rating: 87.4, aggregated_rating_count: 20, url: 'igdb/hk',
+    { name: 'Hollow Knight', aggregated_rating: 87.4, aggregated_rating_count: 20, rating: 90.6, rating_count: 1200, url: 'igdb/hk',
       videos: [{ name: 'Trailer', video_id: 'tr-hk' }, { name: 'Gameplay Video', video_id: 'gp-hk' }] },
     { name: 'Celeste', aggregated_rating: 91, aggregated_rating_count: 15 },
     { name: 'Hades', aggregated_rating: 93, aggregated_rating_count: 30 },
@@ -41,7 +41,7 @@ test('keeps only well-rated games that are discounted in the selected country', 
   assert.deepEqual(deals[1], {
     slug: '1', title: 'Hollow Knight', url: 'u1', image: 'i1',
     price: '30,50 zł', originalPrice: '61,00 zł', discount: 50, saleEndsAt: '2026-10-30T22:59:59Z',
-    criticScore: 87, criticReviews: 20, igdbUrl: 'igdb/hk',
+    criticScore: 87, criticReviews: 20, communityScore: 91, communityRatings: 1200, popularityRank: 7, igdbUrl: 'igdb/hk',
     igdbGameplayVideoId: 'gp-hk', igdbTrailerVideoId: 'tr-hk',
   });
 });

@@ -24,8 +24,8 @@ test('pages through the Nintendo Europe search and keeps game nsuids only', asyn
   assert.equal(requests[1].searchParams.get('start'), '1000');
   assert.match(requests[0].searchParams.get('fq'), /price_has_discount_b:true/);
   assert.deepEqual(games, [
-    { nsuid: '70010000062277', title: 'Hogwarts Legacy', url: 'https://www.nintendo.com/en-gb/Games/x.html', image: 'wide.jpg' },
-    { nsuid: '70010000000001', title: 'Celeste', url: null, image: 'sq.jpg' },
+    { nsuid: '70010000062277', title: 'Hogwarts Legacy', url: 'https://www.nintendo.com/en-gb/Games/x.html', image: 'wide.jpg', popularityRank: 1 },
+    { nsuid: '70010000000001', title: 'Celeste', url: null, image: 'sq.jpg', popularityRank: 2 },
   ]);
 });
 
