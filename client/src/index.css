@@ -1,0 +1,47 @@
+:root {
+  font-family: system-ui, sans-serif;
+  color: #1f2328;
+  background: #f6f8fa;
+}
+
+main {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+h1 {
+  margin-bottom: 0;
+  color: #e60012;
+}
+
+.subtitle {
+  color: #656d76;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+}
+
+th,
+td {
+  padding: 0.6rem 0.8rem;
+  border-bottom: 1px solid #d0d7de;
+  text-align: left;
+}
+
+.old {
+  text-decoration: line-through;
+  color: #656d76;
+}
+
+.discount {
+  font-weight: bold;
+  color: #1a7f37;
+}
+
+.error {
+  color: #cf222e;
+}
