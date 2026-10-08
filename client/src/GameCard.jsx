@@ -22,6 +22,8 @@ function Video({ video, title }) {
   );
 }
 
+const formatDay = (iso) => new Date(iso).toLocaleDateString('pl-PL', { day: 'numeric', month: 'long' });
+
 export default function GameCard({ game }) {
   return (
     <li className="card">
@@ -33,19 +35,31 @@ export default function GameCard({ game }) {
         )}
       </div>
       <div className="body">
-        <h2>
-          <a href={game.url} target="_blank" rel="noreferrer">
-            {game.title}
+        <div className="title-row">
+          <h2>
+            <a href={game.url} target="_blank" rel="noreferrer">
+              {game.title}
+            </a>
+          </h2>
+          <a
+            className="score"
+            href={game.igdbUrl ?? undefined}
+            target="_blank"
+            rel="noreferrer"
+            title={game.criticReviews ? `Średnia z ${game.criticReviews} recenzji krytyków (IGDB)` : 'Ocena krytyków (IGDB)'}
+          >
+            {game.criticScore}
           </a>
-        </h2>
+        </div>
         <p className="prices">
           {game.price && <strong>{game.price}</strong>}
           {game.originalPrice && <s>{game.originalPrice}</s>}
           {game.discount != null && <span className="discount">-{game.discount}%</span>}
         </p>
+        {game.saleEndsAt && <p className="sale-ends">Promocja do {formatDay(game.saleEndsAt)}</p>}
         {game.video ? (
           <p className="video-meta">
-            {game.video.title} · {game.video.channel}
+            {game.video.channel ? `${game.video.title} · ${game.video.channel}` : game.video.title}
           </p>
         ) : (
           <a className="yt-link" href={game.youtubeSearchUrl} target="_blank" rel="noreferrer">

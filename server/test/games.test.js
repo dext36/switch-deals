@@ -16,7 +16,7 @@ test('crawls on first request and looks up videos once per game', async () => {
   const store = memoryStore();
   const service = createGameService({
     store,
-    crawl: async () => list,
+    fetchDeals: async () => list,
     findVideo: async (title) => (searched.push(title), { id: `vid-${title}` }),
     checkIntervalMs: 1000,
     now: () => clock,
@@ -45,7 +45,7 @@ test('keeps updatedAt when the list did not change', async () => {
   let clock = 0;
   const service = createGameService({
     store: memoryStore(),
-    crawl: async () => [game('a')],
+    fetchDeals: async () => [game('a')],
     findVideo: null,
     checkIntervalMs: 1000,
     now: () => clock,
@@ -62,7 +62,7 @@ test('serves stored data with an error when crawling fails', async () => {
   const stored = { checkedAt: new Date(0).toISOString(), updatedAt: null, games: [game('a')], videos: {} };
   const service = createGameService({
     store: memoryStore(stored),
-    crawl: async () => { throw new Error('HTTP 503'); },
+    fetchDeals: async () => { throw new Error('HTTP 503'); },
     findVideo: null,
     checkIntervalMs: 1000,
     now: () => 10_000,
@@ -78,7 +78,7 @@ test('stops video lookups after a YouTube error and retries later', async () => 
   const store = memoryStore();
   const service = createGameService({
     store,
-    crawl: async () => [game('a'), game('b')],
+    fetchDeals: async () => [game('a'), game('b')],
     findVideo: async (title) => {
       if (fail) throw new Error('quota');
       return { id: title };
@@ -103,10 +103,28 @@ test('treats a list with reordered object keys as unchanged', async () => {
   };
   const service = createGameService({
     store: memoryStore(stored),
-    crawl: async () => [game('a')],
+    fetchDeals: async () => [game('a')],
     findVideo: null,
     checkIntervalMs: 1000,
     now: () => 5000,
   });
   assert.equal((await service.getGames()).updatedAt, new Date(0).toISOString());
+});
+
+test('prefers IGDB gameplay, then YouTube search, then IGDB trailer', async () => {
+  const searched = [];
+  const service = createGameService({
+    store: memoryStore(),
+    fetchDeals: async () => [
+      { ...game('a'), igdbGameplayVideoId: 'gp-a', igdbTrailerVideoId: 'tr-a' },
+      { ...game('b'), igdbGameplayVideoId: null, igdbTrailerVideoId: 'tr-b' },
+      { ...game('c'), igdbGameplayVideoId: null, igdbTrailerVideoId: 'tr-c' },
+    ],
+    findVideo: async (title) => (searched.push(title), title === 'B' ? { id: 'yt-b' } : null),
+    checkIntervalMs: 1000,
+  });
+  const { games } = await service.getGames();
+  assert.deepEqual(searched, ['B', 'C']);
+  assert.deepEqual(games.map((g) => g.video?.id), ['gp-a', 'yt-b', 'tr-c']);
+  assert.equal(games[0].igdbGameplayVideoId, undefined);
 });

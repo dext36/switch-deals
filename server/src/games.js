@@ -9,12 +9,27 @@ const canonical = (value) =>
       : value;
 const sameList = (a, b) => JSON.stringify(canonical(a)) === JSON.stringify(canonical(b));
 
-export function createGameService({ store, crawl, findVideo, checkIntervalMs, now = () => Date.now() }) {
+const igdbVideo = (id, title) => ({
+  id,
+  title,
+  channel: null,
+  thumbnail: `https://i.ytimg.com/vi/${id}/hqdefault.jpg`,
+});
+
+// Kolejność: gameplay z IGDB → film znaleziony w YouTube → zwiastun z IGDB.
+function videoFor(game, videos) {
+  if (game.igdbGameplayVideoId) return igdbVideo(game.igdbGameplayVideoId, `${game.title} – gameplay`);
+  if (videos[game.slug]) return videos[game.slug];
+  if (game.igdbTrailerVideoId) return igdbVideo(game.igdbTrailerVideoId, `${game.title} – zwiastun`);
+  return null;
+}
+
+export function createGameService({ store, fetchDeals, findVideo, checkIntervalMs, now = () => Date.now() }) {
   let refreshing = null;
 
   async function refresh(data) {
-    const games = await crawl();
-    if (games.length === 0) throw new Error('Nie znaleziono żadnych gier na stronie źródłowej');
+    const games = await fetchDeals();
+    if (games.length === 0) throw new Error('Nie znaleziono żadnych gier spełniających kryteria');
 
     const checkedAt = new Date(now()).toISOString();
     const changed = !sameList(games, data.games);
@@ -28,7 +43,7 @@ export function createGameService({ store, crawl, findVideo, checkIntervalMs, no
 
     if (findVideo) {
       for (const game of games) {
-        if (game.slug in next.videos) continue;
+        if (game.igdbGameplayVideoId || game.slug in next.videos) continue;
         try {
           next.videos[game.slug] = await findVideo(game.title);
         } catch (err) {
@@ -44,7 +59,7 @@ export function createGameService({ store, crawl, findVideo, checkIntervalMs, no
 
   return {
     // Przy każdym zapytaniu sprawdza, czy zapisana lista jest aktualna;
-    // stronę źródłową odpytuje najwyżej raz na checkIntervalMs.
+    // źródła odpytuje najwyżej raz na checkIntervalMs.
     async getGames() {
       let data = await store.load();
       let error = null;
@@ -66,9 +81,9 @@ export function createGameService({ store, crawl, findVideo, checkIntervalMs, no
         checkedAt: data.checkedAt,
         updatedAt: data.updatedAt,
         error,
-        games: data.games.map((game) => ({
+        games: data.games.map(({ igdbGameplayVideoId, igdbTrailerVideoId, ...game }) => ({
           ...game,
-          video: data.videos[game.slug] ?? null,
+          video: videoFor({ ...game, igdbGameplayVideoId, igdbTrailerVideoId }, data.videos),
           youtubeSearchUrl: youtubeSearchUrl(game.title),
         })),
       };

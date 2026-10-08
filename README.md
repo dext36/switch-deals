@@ -5,14 +5,23 @@ Testowy projekt full-stack w JavaScript:
 - **server/** – backend w [Express](https://expressjs.com/) (port `3001`)
 - **client/** – frontend w [React](https://react.dev/) + [Vite](https://vite.dev/) (port `5173`)
 
-Backend crawluje listę [najgorętszych gier na Switcha z oceną krytyków 83+ z Deku Deals](https://www.dekudeals.com/hottest?filter%5Bcritic_score%5D=83&filter%5Bplatform%5D=switch), zapisuje ją i do każdej gry wyszukuje gameplay na YouTube. Frontend pokazuje listę gier z filmami.
+Backend zbiera gry na Switcha, które są **aktualnie w promocji w eShopie** i mają **ocenę krytyków co najmniej 83**, i do każdej dobiera gameplay z YouTube. Frontend pokazuje listę gier z filmami.
+
+### Skąd są dane
+
+1. **Lista promocji** – wyszukiwarka Nintendo of Europe (`searching.nintendo-europe.com`, z niej korzysta nintendo.com): wszystkie gry na Switcha z obniżoną ceną.
+2. **Oceny krytyków** – [IGDB](https://api-docs.igdb.com/) (`aggregated_rating`, średnia z recenzji krytyków). To nie jest Metacritic – Metacritic nie ma publicznego API – ale ocena jest zbliżona. IGDB ocenia grę na wszystkich platformach razem, a nie osobno wersję na Switcha.
+3. **Ceny** – API cen Nintendo (`api.ec.nintendo.com`) dla kraju `ESHOP_COUNTRY` (domyślnie PL). Na liście zostają tylko gry przecenione w tym kraju.
+4. **Filmy** – najpierw film „gameplay” z IGDB, potem wyszukiwanie w YouTube Data API, a na końcu zwiastun z IGDB. Gdy nic nie ma, strona pokazuje link do wyszukiwarki YouTube.
+
+Tytuły z eShopu i IGDB są dopasowywane po znormalizowanej nazwie (bez ™/®, interpunkcji, dopisków „Nintendo Switch Edition”), również po alternatywnych nazwach z IGDB. Gry o mocno różniących się tytułach mogą zostać pominięte.
 
 ### Jak działa odświeżanie
 
-- Przy każdym zapytaniu o listę backend sprawdza, czy zapisana wersja jest aktualna. Deku Deals odpytuje najwyżej raz na `CHECK_INTERVAL_MINUTES` (domyślnie 10 min), żeby nie obciążać ich strony.
+- Przy każdym zapytaniu o listę backend sprawdza, czy zapisana wersja jest aktualna; źródła odpytuje najwyżej raz na `CHECK_INTERVAL_MINUTES` (domyślnie 30 min).
 - Jeśli lista się zmieniła, zapisuje nową wersję (`updatedAt`); w każdym przypadku aktualizuje czas sprawdzenia (`checkedAt`).
 - Film z YouTube jest wyszukiwany tylko raz dla każdej gry i zapisywany – wyszukiwanie kosztuje 100 z 10 000 dziennych jednostek YouTube Data API.
-- Gdy Deku Deals jest niedostępne, API zwraca ostatnią zapisaną listę z polem `error`.
+- Gdy źródła są niedostępne, API zwraca ostatnią zapisaną listę z polem `error`.
 - Dane trzymane są w Postgresie, gdy ustawione jest `DATABASE_URL` (produkcyjnie [Neon](https://neon.tech)); w przeciwnym razie w pliku `DATA_DIR/games.json` (domyślnie `data/`), co wystarcza lokalnie.
 
 ## Wymagania
@@ -48,12 +57,22 @@ Następnie otwórz http://localhost:5173. W trybie dev Vite przekierowuje zapyta
 
 - `PORT` – port backendu (domyślnie `3001`)
 - `CORS_ORIGIN` – origin frontendu, który może wołać API (domyślnie dowolny)
-- `YOUTUBE_API_KEY` – klucz [YouTube Data API v3](https://developers.google.com/youtube/v3/getting-started); bez niego zamiast filmów są linki do wyszukiwarki YouTube
-- `CHECK_INTERVAL_MINUTES` – minimalny odstęp między sprawdzeniami Deku Deals (domyślnie `10`)
+- `YOUTUBE_API_KEY` – klucz [YouTube Data API v3](https://developers.google.com/youtube/v3/getting-started); bez niego filmy są tylko z IGDB
+- `TWITCH_CLIENT_ID`, `TWITCH_CLIENT_SECRET` – dane aplikacji Twitch, wymagane przez IGDB (zob. niżej)
+- `ESHOP_COUNTRY` – kraj eShopu dla cen (domyślnie `PL`)
+- `MIN_CRITIC_SCORE` – minimalna ocena krytyków (domyślnie `83`)
+- `MIN_CRITIC_REVIEWS` – minimalna liczba recenzji, żeby ocena się liczyła (domyślnie `3`)
+- `CHECK_INTERVAL_MINUTES` – minimalny odstęp między sprawdzeniami źródeł (domyślnie `30`)
 - `DATABASE_URL` – adres bazy Postgres; tabele tworzą się same przy starcie
 - `DATA_DIR` – katalog na zapisane dane, gdy nie ma `DATABASE_URL` (domyślnie `data`)
-- `SOURCE_URL` – adres listy do crawlowania (domyślnie lista Deku Deals powyżej)
 - `VITE_API_URL` – adres backendu dla frontendu, gdy jest hostowany osobno (domyślnie ten sam origin)
+
+### Klucze IGDB (Twitch)
+
+1. Zaloguj się na https://dev.twitch.tv/console (konto Twitch z włączonym 2FA).
+2. **Register Your Application**: dowolna nazwa, OAuth Redirect URL `http://localhost`, kategoria „Application Integration”, typ klienta **Confidential**.
+3. Skopiuj **Client ID** i wygeneruj **Client Secret**.
+4. Ustaw je jako `TWITCH_CLIENT_ID` i `TWITCH_CLIENT_SECRET` (lokalnie w środowisku, na Render w **Environment**).
 
 ## Deploy na GitHub Pages
 

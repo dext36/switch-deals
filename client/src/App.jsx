@@ -28,11 +28,11 @@ export default function App() {
       <header>
         <h1>Switch Deals</h1>
         <p className="subtitle">
-          Najgorętsze gry na Switcha z oceną krytyków 83+ według{' '}
-          <a href="https://www.dekudeals.com/hottest" target="_blank" rel="noreferrer">
-            Deku Deals
+          Gry na Switcha w promocji w polskim eShopie z oceną krytyków 83+ (według{' '}
+          <a href="https://www.igdb.com" target="_blank" rel="noreferrer">
+            IGDB
           </a>
-          , z gameplayem z YouTube.
+          ), z gameplayem z YouTube.
         </p>
         {data && (
           <p className="meta">
