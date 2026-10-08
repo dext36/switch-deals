@@ -1,7 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-const EMPTY = { checkedAt: null, updatedAt: null, games: [], videos: {} };
+const EMPTY = { checkedAt: null, updatedAt: null, builtAt: null, eshopIds: null, games: [], videos: {} };
 
 export function createFileStore(file) {
   return {

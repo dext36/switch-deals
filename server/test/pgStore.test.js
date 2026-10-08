@@ -14,11 +14,13 @@ test('Postgres store round-trips data', { skip: !url && 'TEST_DATABASE_URL not s
   const store = createPgStore(url);
   after(() => store.close());
 
-  assert.deepEqual(await store.load(), { checkedAt: null, updatedAt: null, games: [], videos: {} });
+  assert.deepEqual(await store.load(), { checkedAt: null, updatedAt: null, builtAt: null, eshopIds: null, games: [], videos: {} });
 
   const first = {
     checkedAt: '2026-10-08T10:00:00.000Z',
     updatedAt: '2026-10-08T10:00:00.000Z',
+    builtAt: '2026-10-08T10:00:00.000Z',
+    eshopIds: ['a', 'b', 'x'],
     games: [{ slug: 'a', title: 'A' }, { slug: 'b', title: 'B' }],
     videos: { a: { id: 'vid-a' }, b: null },
   };

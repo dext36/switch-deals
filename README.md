@@ -23,7 +23,9 @@ Tytuły z eShopu i IGDB są dopasowywane po znormalizowanej nazwie (bez ™/®, 
 
 ### Jak działa odświeżanie
 
-- Przy każdym zapytaniu o listę backend sprawdza, czy zapisana wersja jest aktualna; źródła odpytuje najwyżej raz na `CHECK_INTERVAL_MINUTES` (domyślnie 30 min).
+- Przy każdym zapytaniu o listę backend sprawdza, czy zapisana wersja jest aktualna; eShop odpytuje najwyżej raz na `CHECK_INTERVAL_MINUTES` (domyślnie 30 min).
+- Zapisywana jest lista identyfikatorów (nsuid) gier w promocji z eShopu. Reszta zapytań (IGDB i ceny w danym kraju) idzie tylko wtedy, gdy w eShopie pojawiła się nowa pozycja albo od ostatniego pełnego przeliczenia minęło `FULL_REFRESH_DAYS` (domyślnie 7 dni).
+- Gdy pozycje tylko zniknęły z promocji, gry są usuwane z zapisanej listy bez dodatkowych zapytań; aktualizowany jest też ranking popularności.
 - Jeśli lista się zmieniła, zapisuje nową wersję (`updatedAt`); w każdym przypadku aktualizuje czas sprawdzenia (`checkedAt`).
 - Film z YouTube jest wyszukiwany tylko raz dla każdej gry i zapisywany – wyszukiwanie kosztuje 100 z 10 000 dziennych jednostek YouTube Data API.
 - Gdy źródła są niedostępne, API zwraca ostatnią zapisaną listę z polem `error`.
@@ -67,7 +69,8 @@ Następnie otwórz http://localhost:5173. W trybie dev Vite przekierowuje zapyta
 - `ESHOP_COUNTRY` – kraj eShopu dla cen (domyślnie `PL`)
 - `MIN_CRITIC_SCORE` – minimalna ocena krytyków (domyślnie `83`)
 - `MIN_CRITIC_REVIEWS` – minimalna liczba recenzji, żeby ocena się liczyła (domyślnie `3`)
-- `CHECK_INTERVAL_MINUTES` – minimalny odstęp między sprawdzeniami źródeł (domyślnie `30`)
+- `CHECK_INTERVAL_MINUTES` – minimalny odstęp między sprawdzeniami eShopu (domyślnie `30`)
+- `FULL_REFRESH_DAYS` – co ile dni lista jest liczona od nowa (IGDB + ceny), nawet bez nowych promocji (domyślnie `7`)
 - `DATABASE_URL` – adres bazy Postgres; tabele tworzą się same przy starcie
 - `DATA_DIR` – katalog na zapisane dane, gdy nie ma `DATABASE_URL` (domyślnie `data`)
 - `VITE_API_URL` – adres backendu dla frontendu, gdy jest hostowany osobno (domyślnie ten sam origin)
