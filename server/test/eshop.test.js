@@ -43,7 +43,8 @@ test('fetches prices in batches of 50 and keeps only discounted ones', async () 
           ? [
               { title_id: 70010000000000, sales_status: 'onsale',
                 regular_price: { amount: '124,00 zł', raw_value: '124' },
-                discount_price: { amount: '18,60 zł', raw_value: '18.60', end_datetime: '2026-10-30T22:59:59Z' } },
+                discount_price: { amount: '18,60 zł', raw_value: '18.60',
+                  start_datetime: '2026-10-01T00:00:00Z', end_datetime: '2026-10-30T22:59:59Z' } },
               { title_id: 70010000000001, sales_status: 'onsale', regular_price: { amount: '269,00 zł', raw_value: '269' } },
             ]
           : [],
@@ -53,6 +54,6 @@ test('fetches prices in batches of 50 and keeps only discounted ones', async () 
 
   assert.deepEqual(batches, [50, 1]);
   assert.deepEqual([...prices.entries()], [
-    ['70010000000000', { price: '18,60 zł', originalPrice: '124,00 zł', discount: 85, saleEndsAt: '2026-10-30T22:59:59Z' }],
+    ['70010000000000', { price: '18,60 zł', originalPrice: '124,00 zł', discount: 85, saleStartsAt: '2026-10-01T00:00:00Z', saleEndsAt: '2026-10-30T22:59:59Z' }],
   ]);
 });

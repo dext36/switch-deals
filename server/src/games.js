@@ -44,19 +44,26 @@ export function createGameService({
     const stale = !data.builtAt || now() - Date.parse(data.builtAt) >= fullRefreshMs;
     const rebuild = stale || !data.eshopIds || eshopIds.some((id) => !known.has(id));
 
+    // Kiedy gra pierwszy raz pojawiła się na liście – zastępcza data początku promocji,
+    // gdy API cen nie podało start_datetime.
+    const firstSeen = new Map((data.games ?? []).map((g) => [g.slug, g.firstSeenAt]));
+    const withFirstSeen = (g) => ({ ...g, firstSeenAt: firstSeen.get(g.slug) ?? checkedAt });
+
     let games;
     if (rebuild) {
-      games = await buildDeals(onSale);
+      games = (await buildDeals(onSale)).map(withFirstSeen);
       if (games.length === 0) throw new Error('Nie znaleziono żadnych gier spełniających kryteria');
     } else {
       // Bez nowych pozycji: usuwamy gry, których promocja się skończyła, i aktualizujemy ranking popularności.
       const rank = new Map(onSale.map((g) => [g.nsuid, g.popularityRank]));
       games = data.games
         .filter((g) => rank.has(g.slug))
-        .map((g) => ({ ...g, popularityRank: rank.get(g.slug) ?? g.popularityRank }));
+        .map((g) => withFirstSeen({ ...g, popularityRank: rank.get(g.slug) ?? g.popularityRank }));
     }
 
-    const changed = !sameList(games, data.games);
+    // Data pierwszego zauważenia to dane pomocnicze – sama w sobie nie zmienia listy.
+    const listed = (list = []) => list.map(({ firstSeenAt, ...g }) => g);
+    const changed = !sameList(listed(games), listed(data.games));
     const next = {
       ...data,
       checkedAt,
@@ -107,8 +114,9 @@ export function createGameService({
         checkedAt: data.checkedAt,
         updatedAt: data.updatedAt,
         error,
-        games: data.games.map(({ igdbGameplayVideoId, igdbTrailerVideoId, screenshotIds = [], ...game }) => ({
+        games: data.games.map(({ igdbGameplayVideoId, igdbTrailerVideoId, screenshotIds = [], firstSeenAt, ...game }) => ({
           ...game,
+          saleStartsAt: game.saleStartsAt ?? firstSeenAt ?? null,
           screenshots: screenshotIds.map(screenshotUrl),
           video: videoFor({ ...game, igdbGameplayVideoId, igdbTrailerVideoId }, data.videos),
           youtubeSearchUrl: youtubeSearchUrl(game.title),

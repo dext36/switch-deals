@@ -52,6 +52,7 @@ export async function fetchSalePrices(nsuids, { country, fetchImpl, userAgent } 
         price: p.discount_price.amount,
         originalPrice: p.regular_price.amount,
         discount: regular > 0 ? Math.round((1 - sale / regular) * 100) : null,
+        saleStartsAt: p.discount_price.start_datetime ?? null,
         saleEndsAt: p.discount_price.end_datetime ?? null,
       });
     }
