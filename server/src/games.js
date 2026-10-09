@@ -42,7 +42,9 @@ export function createGameService({
     const eshopIds = [...new Set(onSale.map((g) => g.nsuid))].sort();
     const known = new Set(data.eshopIds ?? []);
     const stale = !data.builtAt || now() - Date.parse(data.builtAt) >= fullRefreshMs;
-    const rebuild = stale || !data.eshopIds || eshopIds.some((id) => !known.has(id));
+    // Gry zapisane przed dodaniem daty początku promocji – trzeba je raz przeliczyć, żeby ją uzupełnić.
+    const outdated = (data.games ?? []).some((g) => !('saleStartsAt' in g));
+    const rebuild = stale || outdated || !data.eshopIds || eshopIds.some((id) => !known.has(id));
 
     // Kiedy gra pierwszy raz pojawiła się na liście – zastępcza data początku promocji,
     // gdy API cen nie podało start_datetime.
