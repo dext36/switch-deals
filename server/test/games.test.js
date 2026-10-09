@@ -7,7 +7,7 @@ const memoryStore = (initial) => {
   return { load: async () => structuredClone(data), save: async (d) => { data = structuredClone(d); }, get: () => data };
 };
 
-const game = (slug) => ({ slug, title: slug.toUpperCase(), url: `https://x/items/${slug}` });
+const game = (slug) => ({ slug, title: slug.toUpperCase(), url: `https://x/items/${slug}`, saleStartsAt: null });
 
 // Lista z eShopu to same nsuid gier z listy; buildDeals zwraca gotową listę.
 const sources = (getList) => ({
@@ -105,7 +105,7 @@ test('treats a list with reordered object keys as unchanged', async () => {
   const stored = {
     checkedAt: new Date(0).toISOString(),
     updatedAt: new Date(0).toISOString(),
-    games: [{ url: 'https://x/items/a', title: 'A', slug: 'a' }],
+    games: [{ saleStartsAt: null, url: 'https://x/items/a', title: 'A', slug: 'a' }],
     videos: {},
   };
   const service = createGameService({
@@ -231,4 +231,26 @@ test('falls back to the first time a game was seen when the sale start is unknow
   assert.deepEqual(result.games.map((g) => g.saleStartsAt), [
     new Date(0).toISOString(), '2026-10-01T00:00:00Z', new Date(5000).toISOString(),
   ]);
+});
+
+test('rebuilds stored games saved before the sale start date was tracked', async () => {
+  let builds = 0;
+  const stored = {
+    checkedAt: new Date(0).toISOString(),
+    builtAt: new Date(0).toISOString(),
+    eshopIds: ['a'],
+    games: [{ slug: 'a', title: 'A' }],
+    videos: {},
+  };
+  const service = createGameService({
+    store: memoryStore(stored),
+    fetchOnSale: async () => [{ nsuid: 'a' }],
+    buildDeals: async () => (builds++, [{ ...game('a'), saleStartsAt: '2026-10-01T00:00:00Z' }]),
+    checkIntervalMs: 1000,
+    fullRefreshMs: 1e9,
+    now: () => 10_000,
+  });
+  const result = await service.getGames();
+  assert.equal(builds, 1);
+  assert.equal(result.games[0].saleStartsAt, '2026-10-01T00:00:00Z');
 });
