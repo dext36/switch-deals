@@ -74,6 +74,41 @@ function Carousel({ video, screenshots, title }) {
 
 const formatDay = (iso) => new Date(iso).toLocaleDateString('pl-PL', { day: 'numeric', month: 'long' });
 
+// Kolor paska wg postępu promocji: zielony (świeża) → żółty → czerwony → brązowy (tuż przed końcem).
+const SALE_COLORS = [
+  [0, [46, 160, 67]],
+  [0.4, [222, 176, 0]],
+  [0.75, [214, 58, 47]],
+  [1, [122, 74, 36]],
+];
+
+function saleColor(progress) {
+  const i = SALE_COLORS.findIndex(([stop]) => stop >= progress);
+  if (i <= 0) return `rgb(${SALE_COLORS[0][1]})`;
+  const [[from, a], [to, b]] = [SALE_COLORS[i - 1], SALE_COLORS[i]];
+  const t = (progress - from) / (to - from);
+  return `rgb(${a.map((v, k) => Math.round(v + (b[k] - v) * t))})`;
+}
+
+function SaleProgress({ startsAt, endsAt }) {
+  const start = Date.parse(startsAt);
+  const end = Date.parse(endsAt);
+  if (!(end > start)) return null;
+  const progress = Math.min(1, Math.max(0, (Date.now() - start) / (end - start)));
+  const percent = Math.round(progress * 100);
+  return (
+    <div
+      className="sale-progress"
+      role="progressbar"
+      aria-valuenow={percent}
+      aria-label="Postęp promocji"
+      title={`Promocja od ${formatDay(startsAt)} do ${formatDay(endsAt)} – minęło ${percent}%`}
+    >
+      <span style={{ width: `${percent}%`, background: saleColor(progress) }} />
+    </div>
+  );
+}
+
 export default function GameCard({ game }) {
   return (
     <li className="card">
@@ -117,6 +152,7 @@ export default function GameCard({ game }) {
           </p>
         )}
         {game.saleEndsAt && <p className="sale-ends">Promocja do {formatDay(game.saleEndsAt)}</p>}
+        {game.saleStartsAt && game.saleEndsAt && <SaleProgress startsAt={game.saleStartsAt} endsAt={game.saleEndsAt} />}
         {game.video ? (
           <p className="video-meta">
             {game.video.channel ? `${game.video.title} · ${game.video.channel}` : game.video.title}

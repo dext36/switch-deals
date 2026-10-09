@@ -208,3 +208,27 @@ test('rebuilds stored data saved before eShop ids were tracked', async () => {
   await service.getGames();
   assert.equal(builds, 1);
 });
+
+test('falls back to the first time a game was seen when the sale start is unknown', async () => {
+  let clock = 0;
+  let list = [game('a'), { ...game('b'), saleStartsAt: '2026-10-01T00:00:00Z' }];
+  const service = createGameService({
+    store: memoryStore(),
+    fetchOnSale: async () => list.map((g) => ({ nsuid: g.slug })),
+    buildDeals: async () => list,
+    checkIntervalMs: 1000,
+    fullRefreshMs: 1e9,
+    now: () => clock,
+  });
+  let result = await service.getGames();
+  assert.deepEqual(result.games.map((g) => g.saleStartsAt), [new Date(0).toISOString(), '2026-10-01T00:00:00Z']);
+  assert.equal(result.games[0].firstSeenAt, undefined);
+
+  // Pełne przeliczenie z nową grą – „a” zachowuje datę pierwszego zauważenia.
+  list = [...list, game('c')];
+  clock = 5000;
+  result = await service.getGames();
+  assert.deepEqual(result.games.map((g) => g.saleStartsAt), [
+    new Date(0).toISOString(), '2026-10-01T00:00:00Z', new Date(5000).toISOString(),
+  ]);
+});
