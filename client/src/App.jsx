@@ -29,6 +29,11 @@ const SORTS = {
   },
   // Gry zapisane przed dodaniem rankingu nie mają popularityRank – trafiają na koniec.
   popularity: { label: 'Popularność', compare: (a, b) => (a.popularityRank ?? Infinity) - (b.popularityRank ?? Infinity) },
+  // Gry bez daty startu promocji trafiają na koniec.
+  newest: {
+    label: 'Najnowsze promocje',
+    compare: (a, b) => (Date.parse(b.saleStartsAt) || -Infinity) - (Date.parse(a.saleStartsAt) || -Infinity),
+  },
 };
 
 // Motyw startowy ustawia skrypt w index.html; przełącznik zapamiętuje wybór w localStorage.
