@@ -7,6 +7,8 @@ export const config = {
   eshopCountry: (process.env.ESHOP_COUNTRY || 'PL').toUpperCase(),
   minCriticScore: number(process.env.MIN_CRITIC_SCORE, 83),
   minCriticReviews: number(process.env.MIN_CRITIC_REVIEWS, 3),
+  // Zapasowo: gra z mniejszą liczbą recenzji krytyków przechodzi, jeśli ma ponad tyle głosów graczy.
+  minCommunityRatings: number(process.env.MIN_COMMUNITY_RATINGS, 10),
   // Najczęściej, jak często backend sprawdza promocje – żeby nie odpytywać API przy każdym wejściu na stronę.
   checkIntervalMs: number(process.env.CHECK_INTERVAL_MINUTES, 30) * 60 * 1000,
   // Nawet bez nowych promocji co tyle dni lista jest liczona od nowa, żeby odświeżyć oceny z IGDB i ceny.
