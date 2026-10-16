@@ -29,12 +29,14 @@ export function createIgdbClient({ clientId, clientSecret, fetchImpl, now = () =
 
   return {
     // Wszystkie gry na Switcha z oceną krytyków (aggregated_rating) co najmniej minScore.
-    async fetchTopRatedSwitchGames({ minScore, minReviews }) {
+    // Gdy recenzji krytyków jest mniej niż minReviews, wystarczy ponad minCommunityRatings głosów graczy.
+    async fetchTopRatedSwitchGames({ minScore, minReviews, minCommunityRatings }) {
       const games = [];
       for (let offset = 0; ; offset += PAGE_SIZE) {
         const page = await query(
           'fields name, alternative_names.name, aggregated_rating, aggregated_rating_count, rating, rating_count, url, videos.video_id, videos.name, screenshots.image_id;' +
-            ` where platforms = ${SWITCH_PLATFORMS} & aggregated_rating >= ${minScore} & aggregated_rating_count >= ${minReviews};` +
+            ` where platforms = ${SWITCH_PLATFORMS} & aggregated_rating >= ${minScore}` +
+            ` & (aggregated_rating_count >= ${minReviews} | rating_count > ${minCommunityRatings});` +
             ` sort id asc; limit ${PAGE_SIZE}; offset ${offset};`,
         );
         games.push(...page);

@@ -18,7 +18,7 @@ test('authenticates once and pages through top rated Switch games', async () => 
     },
   });
 
-  const games = await client.fetchTopRatedSwitchGames({ minScore: 83, minReviews: 3 });
+  const games = await client.fetchTopRatedSwitchGames({ minScore: 83, minReviews: 3, minCommunityRatings: 10 });
   assert.equal(games.length, 501);
 
   const [tokenCall, ...gameCalls] = calls;
@@ -26,8 +26,8 @@ test('authenticates once and pages through top rated Switch games', async () => 
   assert.equal(gameCalls.length, 2);
   assert.equal(gameCalls[0].options.headers.Authorization, 'Bearer tok');
   assert.equal(gameCalls[0].options.headers['Client-ID'], 'cid');
-  assert.match(gameCalls[0].options.body, /platforms = \(130,508\) & aggregated_rating >= 83 & aggregated_rating_count >= 3/);
+  assert.match(gameCalls[0].options.body, /platforms = \(130,508\) & aggregated_rating >= 83 & \(aggregated_rating_count >= 3 \| rating_count > 10\);/);
 
-  await client.fetchTopRatedSwitchGames({ minScore: 83, minReviews: 3 });
+  await client.fetchTopRatedSwitchGames({ minScore: 83, minReviews: 3, minCommunityRatings: 10 });
   assert.equal(calls.filter((c) => c.url.startsWith('https://id.twitch.tv')).length, 1);
 });

@@ -69,6 +69,7 @@ Następnie otwórz http://localhost:5173. W trybie dev Vite przekierowuje zapyta
 - `ESHOP_COUNTRY` – kraj eShopu dla cen (domyślnie `PL`)
 - `MIN_CRITIC_SCORE` – minimalna ocena krytyków (domyślnie `83`)
 - `MIN_CRITIC_REVIEWS` – minimalna liczba recenzji, żeby ocena się liczyła (domyślnie `3`)
+- `MIN_COMMUNITY_RATINGS` – gra z mniejszą liczbą recenzji krytyków też trafia na listę, jeśli ma więcej głosów graczy niż ta wartość (domyślnie `10`)
 - `CHECK_INTERVAL_MINUTES` – minimalny odstęp między sprawdzeniami eShopu (domyślnie `30`)
 - `FULL_REFRESH_DAYS` – co ile dni lista jest liczona od nowa (IGDB + ceny), nawet bez nowych promocji (domyślnie `7`)
 - `DATABASE_URL` – adres bazy Postgres; tabele tworzą się same przy starcie

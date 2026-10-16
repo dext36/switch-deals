@@ -29,7 +29,7 @@ const gameService = createGameService({
     findRatedDeals({
       onSale,
       fetchTopRated: () =>
-        igdb.fetchTopRatedSwitchGames({ minScore: config.minCriticScore, minReviews: config.minCriticReviews }),
+        igdb.fetchTopRatedSwitchGames({ minScore: config.minCriticScore, minReviews: config.minCriticReviews, minCommunityRatings: config.minCommunityRatings }),
       fetchSalePrices: (nsuids) => fetchSalePrices(nsuids, { country, userAgent }),
     }),
   findVideo: config.youtubeApiKey
