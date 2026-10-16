@@ -194,6 +194,32 @@ test('skips IGDB and price lookups when eShop has nothing new', async () => {
   assert.equal(builds, 3);
 });
 
+test('rebuilds when the selection criteria change', async () => {
+  let clock = 0;
+  let builds = 0;
+  const store = memoryStore();
+  const create = (criteria) => createGameService({
+    store,
+    fetchOnSale: async () => [{ nsuid: 'a' }],
+    buildDeals: async () => (builds++, [game('a')]),
+    checkIntervalMs: 1000,
+    fullRefreshMs: 100_000,
+    criteria,
+    now: () => clock,
+  });
+
+  await create({ minCriticReviews: 3 }).getGames();
+  clock = 2000;
+  await create({ minCriticReviews: 3 }).getGames();
+  assert.equal(builds, 1);
+
+  // Po wdrożeniu z innym progiem lista jest przeliczana mimo braku nowych gier w eShopie.
+  clock = 4000;
+  await create({ minCriticReviews: 3, minCommunityRatings: 10 }).getGames();
+  assert.equal(builds, 2);
+  assert.deepEqual(store.get().criteria, { minCriticReviews: 3, minCommunityRatings: 10 });
+});
+
 test('rebuilds stored data saved before eShop ids were tracked', async () => {
   let builds = 0;
   const stored = { checkedAt: new Date(0).toISOString(), updatedAt: null, games: [game('a')], videos: {} };

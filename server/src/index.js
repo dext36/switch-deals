@@ -36,6 +36,12 @@ const gameService = createGameService({
     ? (title) => findGameplayVideo(title, { apiKey: config.youtubeApiKey })
     : null,
   checkIntervalMs: config.checkIntervalMs,
+  criteria: {
+    country,
+    minCriticScore: config.minCriticScore,
+    minCriticReviews: config.minCriticReviews,
+    minCommunityRatings: config.minCommunityRatings,
+  },
   fullRefreshMs: config.fullRefreshMs,
 });
 
