@@ -28,9 +28,9 @@ function videoFor(game, videos) {
 }
 
 // Pełne przeliczenie (IGDB + ceny) jest potrzebne tylko, gdy w promocji pojawiło się coś nowego
-// albo minęło fullRefreshMs. Gdy gry tylko zniknęły z promocji, wystarczy je usunąć z zapisanej listy.
+// albo minęło fullRefreshMs, albo zmieniły się kryteria wyboru gier (criteria). Gdy gry tylko zniknęły z promocji, wystarczy je usunąć z zapisanej listy.
 export function createGameService({
-  store, fetchOnSale, buildDeals, findVideo, checkIntervalMs, fullRefreshMs, now = () => Date.now(),
+  store, fetchOnSale, buildDeals, findVideo, checkIntervalMs, fullRefreshMs, criteria = null, now = () => Date.now(),
 }) {
   let refreshing = null;
 
@@ -44,7 +44,9 @@ export function createGameService({
     const stale = !data.builtAt || now() - Date.parse(data.builtAt) >= fullRefreshMs;
     // Gry zapisane przed dodaniem daty początku promocji – trzeba je raz przeliczyć, żeby ją uzupełnić.
     const outdated = (data.games ?? []).some((g) => !('saleStartsAt' in g));
-    const rebuild = stale || outdated || !data.eshopIds || eshopIds.some((id) => !known.has(id));
+    // Np. nowy próg ocen po wdrożeniu – lista zapisana wg starych kryteriów jest nieaktualna.
+    const criteriaChanged = !sameList(data.criteria ?? null, criteria);
+    const rebuild = stale || outdated || criteriaChanged || !data.eshopIds || eshopIds.some((id) => !known.has(id));
 
     // Kiedy gra pierwszy raz pojawiła się na liście – zastępcza data początku promocji,
     // gdy API cen nie podało start_datetime.
@@ -71,6 +73,7 @@ export function createGameService({
       checkedAt,
       updatedAt: changed ? checkedAt : data.updatedAt,
       builtAt: rebuild ? checkedAt : data.builtAt,
+      criteria: rebuild ? criteria : data.criteria,
       eshopIds,
       games,
       videos: { ...data.videos },
